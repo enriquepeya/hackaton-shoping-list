@@ -15,6 +15,11 @@ import (
 	"backend/internal/services"
 )
 
+// @title List-Builder Prototype REST API
+// @version 1.0
+// @description Collaborative Shopping and Order List Builder prototype with Go Chi, Hexagonal Architecture and in-memory thread-safe DB.
+// @host localhost:8080
+// @BasePath /
 func main() {
 	// 1. Initialize DB Adapter (outbound)
 	repo := memdb.New()

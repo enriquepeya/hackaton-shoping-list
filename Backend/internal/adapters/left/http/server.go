@@ -96,7 +96,13 @@ func respondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	_ = json.NewEncoder(w).Encode(data)
 }
 
-// handleHealthCheck returns a simple 200 OK status to indicate the service is running.
+// handleHealthCheck godoc
+// @Summary Health check
+// @Description check server status
+// @Tags health
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router /health [get]
 func (s *HTTPServer) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
@@ -116,6 +122,16 @@ type createListRequest struct {
 	Image            string  `json:"image" example:"https://example.com/images/list.jpg"`
 }
 
+// handleCreateList godoc
+// @Summary Create a shopping/order list
+// @Description Create a new shared or private shopping list.
+// @Tags lists
+// @Accept json
+// @Produce json
+// @Param body body createListRequest true "List creation payload"
+// @Success 201 {object} domain.List
+// @Failure 400 {object} errorEnvelope
+// @Router /api/v1/lists [post]
 func (s *HTTPServer) handleCreateList(w http.ResponseWriter, r *http.Request) {
 	var req createListRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -141,6 +157,15 @@ func (s *HTTPServer) handleCreateList(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusCreated, list)
 }
 
+// handleGetListsByUser godoc
+// @Summary Get lists for user
+// @Description Retrieves all lists where the specified user is the owner, or lists that are PUBLIC/sharable.
+// @Tags lists
+// @Produce json
+// @Param userId path string true "User ID"
+// @Success 200 {array} domain.List
+// @Failure 400 {object} errorEnvelope
+// @Router /api/v1/lists/{userId} [get]
 func (s *HTTPServer) handleGetListsByUser(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "userId")
 	if userID == "" {
@@ -165,6 +190,17 @@ func (s *HTTPServer) handleGetListsByUser(w http.ResponseWriter, r *http.Request
 	respondWithJSON(w, http.StatusOK, filtered)
 }
 
+// handleGetListByID godoc
+// @Summary Get list by ID
+// @Description Retrieves list metadata and all items by list ID, checking privacy permissions.
+// @Tags lists
+// @Produce json
+// @Param id path string true "List ID"
+// @Param userId path string true "User ID trying to access"
+// @Success 200 {object} domain.List
+// @Failure 404 {object} errorEnvelope
+// @Failure 403 {object} errorEnvelope
+// @Router /api/v1/lists/{id}/{userId} [get]
 func (s *HTTPServer) handleGetListByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	userID := chi.URLParam(r, "userId")
@@ -197,6 +233,18 @@ type addItemRequest struct {
 	AddedByUserID string  `json:"addedByUserId" example:"user-123"`
 }
 
+// handleAddItemToList godoc
+// @Summary Add item to list
+// @Description Appends a new item with description and positive quantity to an existing list.
+// @Tags items
+// @Accept json
+// @Produce json
+// @Param id path string true "List ID"
+// @Param body body addItemRequest true "Item fields payload"
+// @Success 201 {object} domain.Item
+// @Failure 400 {object} errorEnvelope
+// @Failure 404 {object} errorEnvelope
+// @Router /api/v1/lists/{id}/items [post]
 func (s *HTTPServer) handleAddItemToList(w http.ResponseWriter, r *http.Request) {
 	listID := chi.URLParam(r, "id")
 
@@ -228,6 +276,17 @@ func (s *HTTPServer) handleAddItemToList(w http.ResponseWriter, r *http.Request)
 	respondWithJSON(w, http.StatusCreated, item)
 }
 
+// handleToggleItem godoc
+// @Summary Toggle item inclusion
+// @Description Soft-deletes/removes an item from list if present, or restores it if it was previously soft-deleted.
+// @Tags items
+// @Produce json
+// @Param id path string true "List ID"
+// @Param itemId path string true "Item SKU ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} errorEnvelope
+// @Failure 404 {object} errorEnvelope
+// @Router /api/v1/lists/{id}/items/{itemId}/toggle [patch]
 func (s *HTTPServer) handleToggleItem(w http.ResponseWriter, r *http.Request) {
 	listID := chi.URLParam(r, "id")
 	itemID := chi.URLParam(r, "itemId")
@@ -244,6 +303,14 @@ func (s *HTTPServer) handleToggleItem(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "item toggled successfully"})
 }
 
+// handleDeleteList godoc
+// @Summary Delete list
+// @Tags lists
+// @Produce json
+// @Param id path string true "List ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} errorEnvelope
+// @Router /api/v1/lists/{id} [delete]
 func (s *HTTPServer) handleDeleteList(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -255,6 +322,15 @@ func (s *HTTPServer) handleDeleteList(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "list deleted successfully"})
 }
 
+// handleDeleteItem godoc
+// @Summary Delete item
+// @Tags items
+// @Produce json
+// @Param id path string true "List ID"
+// @Param itemId path string true "Item SKU ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} errorEnvelope
+// @Router /api/v1/lists/{id}/items/{itemId} [delete]
 func (s *HTTPServer) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
 	listID := chi.URLParam(r, "id")
 	itemID := chi.URLParam(r, "itemId")

@@ -1,7 +1,548 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "Collaborative Shopping and Order List Builder prototype with Go Chi, Hexagonal Architecture and in-memory thread-safe DB.",
+        "title": "List-Builder Prototype REST API",
+        "contact": {},
+        "version": "1.0"
     },
-    "paths": {}
+    "host": "localhost:8080",
+    "basePath": "/",
+    "paths": {
+        "/api/v1/lists": {
+            "post": {
+                "description": "Create a new shared or private shopping list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lists"
+                ],
+                "summary": "Create a shopping/order list",
+                "parameters": [
+                    {
+                        "description": "List creation payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.createListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/domain.List"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lists/{id}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lists"
+                ],
+                "summary": "Delete list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lists/{id}/items": {
+            "post": {
+                "description": "Appends a new item with description and positive quantity to an existing list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "items"
+                ],
+                "summary": "Add item to list",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Item fields payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.addItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/domain.Item"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lists/{id}/items/{itemId}": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "items"
+                ],
+                "summary": "Delete item",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item SKU ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lists/{id}/items/{itemId}/toggle": {
+            "patch": {
+                "description": "Soft-deletes/removes an item from list if present, or restores it if it was previously soft-deleted.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "items"
+                ],
+                "summary": "Toggle item inclusion",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Item SKU ID",
+                        "name": "itemId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lists/{id}/{userId}": {
+            "get": {
+                "description": "Retrieves list metadata and all items by list ID, checking privacy permissions.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lists"
+                ],
+                "summary": "Get list by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "List ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID trying to access",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/domain.List"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lists/{userId}": {
+            "get": {
+                "description": "Retrieves all lists where the specified user is the owner, or lists that are PUBLIC/sharable.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lists"
+                ],
+                "summary": "Get lists for user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/domain.List"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.errorEnvelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "check server status",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "domain.Item": {
+            "type": "object",
+            "properties": {
+                "addedByUserId": {
+                    "description": "The user ID of the person who added this item",
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "description": {
+                    "description": "The item's description or name",
+                    "type": "string",
+                    "example": "Whole Milk 1L"
+                },
+                "ean": {
+                    "description": "The European Article Number barcode",
+                    "type": "string",
+                    "example": "1234567890123"
+                },
+                "listId": {
+                    "description": "The identifier of the list this item belongs to",
+                    "type": "string",
+                    "example": "list-456"
+                },
+                "quantity": {
+                    "description": "The quantity of the item",
+                    "type": "integer",
+                    "example": 2
+                },
+                "sku": {
+                    "description": "The Stock Keeping Unit identifier",
+                    "type": "string",
+                    "example": "SKU-1001"
+                }
+            }
+        },
+        "domain.List": {
+            "type": "object",
+            "properties": {
+                "addedByUserId": {
+                    "description": "The user ID of the person who last added an item",
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "createdAt": {
+                    "description": "Timestamp when the list was created",
+                    "type": "string",
+                    "example": "2026-07-16T12:00:00Z"
+                },
+                "deletedAt": {
+                    "description": "Timestamp when the list was deleted, if any",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "The unique list identifier",
+                    "type": "string",
+                    "example": "list-456"
+                },
+                "image": {
+                    "description": "Optional image URL for the list",
+                    "type": "string",
+                    "example": "https://example.com/images/list.jpg"
+                },
+                "isSharable": {
+                    "description": "Flag indicating if other users can access/join this list",
+                    "type": "boolean",
+                    "example": true
+                },
+                "items": {
+                    "description": "The list of items belonging to this shopping list",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Item"
+                    }
+                },
+                "lastPurchaseDate": {
+                    "description": "Timestamp of the last purchase operation",
+                    "type": "string",
+                    "example": "2026-07-16T12:05:00Z"
+                },
+                "listType": {
+                    "description": "The accessibility type of the list. Allowed values: PRIVATE, PUBLIC.",
+                    "type": "string",
+                    "example": "PRIVATE"
+                },
+                "ownerId": {
+                    "description": "The owner's user ID",
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "title": {
+                    "description": "The title/name of the shopping list",
+                    "type": "string",
+                    "example": "Weekly Groceries"
+                },
+                "updatedAt": {
+                    "description": "Timestamp of the last update to the list",
+                    "type": "string",
+                    "example": "2026-07-16T12:05:00Z"
+                },
+                "vendorAssociated": {
+                    "description": "Optional associated vendor",
+                    "type": "string",
+                    "example": "Supermarket"
+                }
+            }
+        },
+        "http.addItemRequest": {
+            "type": "object",
+            "properties": {
+                "addedByUserId": {
+                    "description": "The user ID who added this item",
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "description": {
+                    "description": "The descriptive name of the item",
+                    "type": "string",
+                    "example": "Whole Milk 1L"
+                },
+                "ean": {
+                    "description": "The European Article Number barcode",
+                    "type": "string",
+                    "example": "1234567890123"
+                },
+                "quantity": {
+                    "description": "The quantity of the item",
+                    "type": "integer",
+                    "example": 2
+                },
+                "sku": {
+                    "description": "The Stock Keeping Unit of the item",
+                    "type": "string",
+                    "example": "SKU-1001"
+                }
+            }
+        },
+        "http.createListRequest": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "description": "Optional image URL for the list",
+                    "type": "string",
+                    "example": "https://example.com/images/list.jpg"
+                },
+                "isSharable": {
+                    "description": "Flag indicating if other users can join this list",
+                    "type": "boolean",
+                    "example": true
+                },
+                "listType": {
+                    "description": "The accessibility type of the list (PRIVATE or PUBLIC)",
+                    "type": "string",
+                    "example": "PRIVATE"
+                },
+                "ownerId": {
+                    "description": "The owner's user ID",
+                    "type": "string",
+                    "example": "user-123"
+                },
+                "title": {
+                    "description": "The title of the collaborative list",
+                    "type": "string",
+                    "example": "Weekly Groceries"
+                },
+                "vendorAssociated": {
+                    "description": "Optional associated vendor",
+                    "type": "string",
+                    "example": "Supermarket"
+                }
+            }
+        },
+        "http.errorDetails": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Programmatic error code for client error handling",
+                    "type": "string",
+                    "example": "INVALID_REQUEST_PAYLOAD"
+                },
+                "message": {
+                    "description": "Human-readable message explaining the failure details",
+                    "type": "string",
+                    "example": "invalid request body"
+                }
+            }
+        },
+        "http.errorEnvelope": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "description": "The core error details wrapper",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/http.errorDetails"
+                        }
+                    ]
+                }
+            }
+        }
+    }
 }
