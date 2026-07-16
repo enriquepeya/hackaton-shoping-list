@@ -9,5 +9,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Agregar documentacion y un swagger para probar el proyecto localmente, importante hacerlo con go notations**
+- [x] **Track: Agregar documentacion y un swagger para probar el proyecto localmente, importante hacerlo con go notations**
   *Link: [./tracks/swagger_documentation_20260716/](./tracks/swagger_documentation_20260716/)*
