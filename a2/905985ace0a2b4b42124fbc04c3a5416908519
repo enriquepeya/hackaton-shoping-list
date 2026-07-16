@@ -1,0 +1,21 @@
+Backend/internal/adapters/right/memdb/memdb_test.go
+  s_4e36745035151e::t_1d9cb51e9cdb3b 1-232
+Backend/internal/adapters/right/memdb/memdb.go
+  s_4e36745035151e::t_e668f5355f216d 1-191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a2905985ace0a2b4b42124fbc04c3a5416908519",
+  "prompts": {},
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
