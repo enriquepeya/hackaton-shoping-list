@@ -1,0 +1,27 @@
+conductor/tracks/swagger_documentation_20260716/metadata.json
+  s_4e36745035151e::t_9eeb8e806828d7 1-8
+conductor/tracks/swagger_documentation_20260716/index.md
+  s_4e36745035151e::t_81b377b8d4f268 1-5
+conductor/tracks/swagger_documentation_20260716/spec.md
+  s_4e36745035151e::t_8610008b0f3a53 1-36
+conductor/tracks.md
+  s_4e36745035151e::t_caad44bc40a076 9-13
+conductor/tracks/swagger_documentation_20260716/plan.md
+  s_4e36745035151e::t_3d864d8d456613 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e9278cb473922025b72956b69accb304b73dfb45",
+  "prompts": {},
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
