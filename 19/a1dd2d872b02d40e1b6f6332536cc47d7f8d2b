@@ -1,0 +1,43 @@
+Backend/Agent.md
+  h_b23a6a8439c0dd 1-61
+conductor/product-guidelines.md
+  s_4e36745035151e::t_c2740e2ca37a27 1-36
+conductor/tracks.md
+  s_4e36745035151e::t_61863d6df11ad5 1-8
+conductor/tracks/list_builder_backend_20260716/index.md
+  s_4e36745035151e::t_f27cd412c09d9f 1-5
+conductor/product.md
+  s_4e36745035151e::t_635d009f5c2921 1-3
+  s_4e36745035151e::t_cee556454a5ec8 4-29
+conductor/tech-stack.md
+  s_4e36745035151e::t_12d6a1c24b23d4 1-26
+conductor/index.md
+  s_4e36745035151e::t_58e719a49b2a42 1-14
+conductor/tracks/list_builder_backend_20260716/spec.md
+  s_4e36745035151e::t_d999a518b24af0 1-60
+conductor/tracks/list_builder_backend_20260716/plan.md
+  s_4e36745035151e::t_bce0aee06f2010 1-44
+conductor/tracks/list_builder_backend_20260716/metadata.json
+  s_4e36745035151e::t_2e9edafd6fa13a 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "19a1dd2d872b02d40e1b6f6332536cc47d7f8d2b",
+  "prompts": {},
+  "humans": {
+    "h_b23a6a8439c0dd": {
+      "author": "unknown"
+    }
+  },
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
