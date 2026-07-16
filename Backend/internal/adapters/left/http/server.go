@@ -68,12 +68,15 @@ func corsMiddleware(next http.Handler) http.Handler {
 
 // errorEnvelope and support types define the standard API error payload matching product guidelines.
 type errorEnvelope struct {
+	// The core error details wrapper
 	Error errorDetails `json:"error"`
 }
 
 type errorDetails struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
+	// Programmatic error code for client error handling
+	Code    string `json:"code" example:"INVALID_REQUEST_PAYLOAD"`
+	// Human-readable message explaining the failure details
+	Message string `json:"message" example:"invalid request body"`
 }
 
 func respondWithError(w http.ResponseWriter, statusCode int, errorCode string, msg string) {
@@ -99,12 +102,18 @@ func (s *HTTPServer) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 type createListRequest struct {
-	Title            string  `json:"title"`
-	VendorAssociated *string `json:"vendorAssociated"`
-	OwnerID          string  `json:"ownerId"`
-	ListType         string  `json:"listType"`
-	IsSharable       bool    `json:"isSharable"`
-	Image            string  `json:"image"`
+	// The title of the collaborative list
+	Title            string  `json:"title" example:"Weekly Groceries"`
+	// Optional associated vendor
+	VendorAssociated *string `json:"vendorAssociated" example:"Supermarket"`
+	// The owner's user ID
+	OwnerID          string  `json:"ownerId" example:"user-123"`
+	// The accessibility type of the list (PRIVATE or PUBLIC)
+	ListType         string  `json:"listType" example:"PRIVATE"`
+	// Flag indicating if other users can join this list
+	IsSharable       bool    `json:"isSharable" example:"true"`
+	// Optional image URL for the list
+	Image            string  `json:"image" example:"https://example.com/images/list.jpg"`
 }
 
 func (s *HTTPServer) handleCreateList(w http.ResponseWriter, r *http.Request) {
@@ -176,11 +185,16 @@ func (s *HTTPServer) handleGetListByID(w http.ResponseWriter, r *http.Request) {
 }
 
 type addItemRequest struct {
-	SKU           string  `json:"sku"`
-	EAN           *string `json:"ean"`
-	Description   string  `json:"description"`
-	Quantity      int     `json:"quantity"`
-	AddedByUserID string  `json:"addedByUserId"`
+	// The Stock Keeping Unit of the item
+	SKU           string  `json:"sku" example:"SKU-1001"`
+	// The European Article Number barcode
+	EAN           *string `json:"ean" example:"1234567890123"`
+	// The descriptive name of the item
+	Description   string  `json:"description" example:"Whole Milk 1L"`
+	// The quantity of the item
+	Quantity      int     `json:"quantity" example:"2"`
+	// The user ID who added this item
+	AddedByUserID string  `json:"addedByUserId" example:"user-123"`
 }
 
 func (s *HTTPServer) handleAddItemToList(w http.ResponseWriter, r *http.Request) {
