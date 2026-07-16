@@ -1,0 +1,19 @@
+conductor/tracks/swagger_documentation_20260716/plan.md
+  s_4e36745035151e::t_8e53d43e15afe7 22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "9d960ee3320a14354b6bc0f1fd87e7116254e6e4",
+  "prompts": {},
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
