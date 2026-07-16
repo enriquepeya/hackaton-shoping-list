@@ -24,11 +24,11 @@ This plan breaks down the development of the "List-Builder" backend service into
 
 ## Phase 3: Core Business Logic Service Layer
 
-- [ ] Task: Implement Domain Services
-    - [ ] Write failing unit tests in `internal/services/list_service_test.go` verifying title/owner validation and UUID generation
-    - [ ] Implement `ListService` core business logic
-    - [ ] Verify all service-layer tests pass (Green Phase)
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Core Business Logic Service Layer' (Protocol in workflow.md)
+- [x] Task: Implement Domain Services (b5b28c3)
+    - [x] Write failing unit tests in `internal/services/list_service_test.go` verifying title/owner validation and UUID generation
+    - [x] Implement `ListService` core business logic
+    - [x] Verify all service-layer tests pass (Green Phase)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Core Business Logic Service Layer' (Protocol in workflow.md)
 
 ## Phase 4: Inbound REST Controllers with Go Chi
 
