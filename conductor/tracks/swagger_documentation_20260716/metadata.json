@@ -1,0 +1,8 @@
+{
+  "track_id": "swagger_documentation_20260716",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-07-16T16:20:00Z",
+  "updated_at": "2026-07-16T16:20:00Z",
+  "description": "Agregar documentacion y un swagger para probar el proyecto localmente, importante hacerlo con go notations"
+}
