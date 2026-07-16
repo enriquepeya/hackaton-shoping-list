@@ -6,9 +6,11 @@ import (
 	"strings"
 	"backend/internal/domain"
 	"backend/internal/services"
+	_ "backend/docs"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // HTTPServer represents our HTTP inbound adapter.
@@ -33,6 +35,8 @@ func NewHTTPServer(service *services.ListService) *HTTPServer {
 
 	// Register Routes
 	r.Get("/health", s.handleHealthCheck)
+
+	r.Get("/swagger/*", httpSwagger.WrapHandler)
 
 	r.Post("/api/v1/lists", s.handleCreateList)
 	r.Get("/api/v1/lists/{userId}", s.handleGetListsByUser)

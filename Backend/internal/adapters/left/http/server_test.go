@@ -366,3 +366,22 @@ func TestServerEndpoints(t *testing.T) {
 		}
 	})
 }
+
+func TestSwaggerUI(t *testing.T) {
+	repo := memdb.New()
+	svc := services.NewListService(repo)
+	server := NewHTTPServer(svc)
+
+	req, err := http.NewRequest(http.MethodGet, "/swagger/index.html", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.RequestURI = "/swagger/index.html"
+
+	rr := httptest.NewRecorder()
+	server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200 OK, got %d", rr.Code)
+	}
+}
