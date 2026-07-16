@@ -4,11 +4,12 @@ import "time"
 
 // Item represents an individual shopping list item.
 type Item struct {
-	SKU         string  `json:"sku"`
-	EAN         *string `json:"ean"`
-	ListID      string  `json:"listId"`
-	Description string  `json:"description"`
-	Quantity    int     `json:"quantity"`
+	SKU           string  `json:"sku"`
+	EAN           *string `json:"ean"`
+	ListID        string  `json:"listId"`
+	Description   string  `json:"description"`
+	Quantity      int     `json:"quantity"`
+	AddedByUserID string  `json:"addedByUserId"`
 }
 
 // List represents a collaborative shopping list.
