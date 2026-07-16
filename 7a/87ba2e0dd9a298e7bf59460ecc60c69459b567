@@ -1,0 +1,29 @@
+Backend/seed_data.json
+  s_4e36745035151e::t_87be46e19e46d3 1-70
+.vscode/launch.json
+  s_4e36745035151e::t_d619d9d425062a 1-24
+Backend/internal/adapters/right/memdb/memdb.go
+  s_4e36745035151e::t_2fb7d6a255722b 5,8,19,21,29-56
+  s_4e36745035151e::t_047b46ff229269 7,25-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7a87ba2e0dd9a298e7bf59460ecc60c69459b567",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
