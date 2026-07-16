@@ -1,0 +1,22 @@
+Backend/internal/adapters/left/http/server_test.go
+  s_4e36745035151e::t_42935865a61d73 14
+  s_4e36745035151e::t_513d7ca3ee83c3 1-13,15-53
+Backend/internal/adapters/left/http/server.go
+  s_4e36745035151e::t_d918d4db431fd9 1-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f7e7a16bd422efb402e066a3821d64e2883e3b74",
+  "prompts": {},
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
