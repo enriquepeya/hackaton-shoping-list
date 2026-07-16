@@ -120,6 +120,8 @@ type createListRequest struct {
 	IsSharable       bool    `json:"isSharable" example:"true"`
 	// Optional image URL for the list
 	Image            string  `json:"image" example:"https://example.com/images/list.jpg"`
+	// Initial list of items mandatory during list creation
+	Items            []addItemRequest `json:"items"`
 }
 
 // handleCreateList godoc
@@ -139,6 +141,17 @@ func (s *HTTPServer) handleCreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	items := make([]domain.Item, len(req.Items))
+	for i, it := range req.Items {
+		items[i] = domain.Item{
+			SKU:           it.SKU,
+			EAN:           it.EAN,
+			Description:   it.Description,
+			Quantity:      it.Quantity,
+			AddedByUserID: it.AddedByUserID,
+		}
+	}
+
 	list := &domain.List{
 		Title:            req.Title,
 		VendorAssociated: req.VendorAssociated,
@@ -146,6 +159,7 @@ func (s *HTTPServer) handleCreateList(w http.ResponseWriter, r *http.Request) {
 		ListType:         req.ListType,
 		IsSharable:       req.IsSharable,
 		Image:            req.Image,
+		Items:            items,
 	}
 
 	if err := s.service.CreateList(list); err != nil {

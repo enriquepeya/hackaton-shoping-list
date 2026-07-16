@@ -116,6 +116,11 @@ definitions:
         description: Flag indicating if other users can join this list
         example: true
         type: boolean
+      items:
+        description: Initial list of items mandatory during list creation
+        items:
+          $ref: '#/definitions/http.addItemRequest'
+        type: array
       listType:
         description: The accessibility type of the list (PRIVATE or PUBLIC)
         example: PRIVATE

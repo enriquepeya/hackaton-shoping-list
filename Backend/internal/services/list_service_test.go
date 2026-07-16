@@ -13,6 +13,9 @@ func TestCreateList_Validation(t *testing.T) {
 	// Test empty Title
 	list1 := &domain.List{
 		OwnerID: "user-1",
+		Items: []domain.Item{
+			{SKU: "sku-1", Description: "Milk", Quantity: 1},
+		},
 	}
 	err := svc.CreateList(list1)
 	if err == nil {
@@ -22,10 +25,37 @@ func TestCreateList_Validation(t *testing.T) {
 	// Test empty OwnerID
 	list2 := &domain.List{
 		Title: "My List",
+		Items: []domain.Item{
+			{SKU: "sku-1", Description: "Milk", Quantity: 1},
+		},
 	}
 	err = svc.CreateList(list2)
 	if err == nil {
 		t.Error("expected validation error for empty owner ID, got nil")
+	}
+
+	// Test list without items
+	list3 := &domain.List{
+		Title:   "My List",
+		OwnerID: "user-1",
+		Items:   []domain.Item{}, // Empty items
+	}
+	err = svc.CreateList(list3)
+	if err == nil {
+		t.Error("expected validation error for empty items list, got nil")
+	}
+
+	// Test list with invalid item (negative quantity)
+	list4 := &domain.List{
+		Title:   "My List",
+		OwnerID: "user-1",
+		Items: []domain.Item{
+			{SKU: "sku-1", Description: "Milk", Quantity: -5},
+		},
+	}
+	err = svc.CreateList(list4)
+	if err == nil {
+		t.Error("expected validation error for invalid item quantity, got nil")
 	}
 }
 
@@ -36,6 +66,9 @@ func TestCreateList_SuccessAndGeneration(t *testing.T) {
 	list := &domain.List{
 		Title:   "Groceries",
 		OwnerID: "user-123",
+		Items: []domain.Item{
+			{SKU: "sku-1", Description: "Apples", Quantity: 5},
+		},
 	}
 
 	err := svc.CreateList(list)
@@ -64,6 +97,10 @@ func TestCreateList_SuccessAndGeneration(t *testing.T) {
 	if stored.ID != list.ID || stored.Title != "Groceries" || stored.OwnerID != "user-123" {
 		t.Errorf("stored list mismatch, got: %+v", stored)
 	}
+
+	if len(stored.Items) != 1 || stored.Items[0].SKU != "sku-1" || stored.Items[0].ListID != list.ID {
+		t.Errorf("stored items mismatch, got: %+v", stored.Items)
+	}
 }
 
 func TestAddItemToList_Validation(t *testing.T) {
@@ -74,6 +111,9 @@ func TestAddItemToList_Validation(t *testing.T) {
 	list := &domain.List{
 		Title:   "Shopping List",
 		OwnerID: "user-1",
+		Items: []domain.Item{
+			{SKU: "sku-base", Description: "Base Product", Quantity: 1},
+		},
 	}
 	if err := svc.CreateList(list); err != nil {
 		t.Fatalf("failed to setup list: %v", err)
@@ -120,6 +160,9 @@ func TestAddItemToList_Success(t *testing.T) {
 	list := &domain.List{
 		Title:   "Shopping List",
 		OwnerID: "user-1",
+		Items: []domain.Item{
+			{SKU: "sku-base", Description: "Base Product", Quantity: 1},
+		},
 	}
 	if err := svc.CreateList(list); err != nil {
 		t.Fatalf("failed to setup list: %v", err)
@@ -142,12 +185,12 @@ func TestAddItemToList_Success(t *testing.T) {
 		t.Fatalf("failed to retrieve list: %v", err)
 	}
 
-	if len(stored.Items) != 1 {
-		t.Fatalf("expected 1 item in list, got %d", len(stored.Items))
+	if len(stored.Items) != 2 {
+		t.Fatalf("expected 2 items in list, got %d", len(stored.Items))
 	}
 
-	if stored.Items[0].SKU != "sku-1" || stored.Items[0].Description != "Apples" || stored.Items[0].Quantity != 5 {
-		t.Errorf("item mismatch, got: %+v", stored.Items[0])
+	if stored.Items[1].SKU != "sku-1" || stored.Items[1].Description != "Apples" || stored.Items[1].Quantity != 5 {
+		t.Errorf("item mismatch, got: %+v", stored.Items[1])
 	}
 }
 
@@ -158,6 +201,9 @@ func TestProxyMethods(t *testing.T) {
 	list := &domain.List{
 		Title:   "Proxy Test",
 		OwnerID: "user-2",
+		Items: []domain.Item{
+			{SKU: "sku-base", Description: "Base Product", Quantity: 1},
+		},
 	}
 	if err := svc.CreateList(list); err != nil {
 		t.Fatalf("failed to create list: %v", err)
@@ -187,10 +233,10 @@ func TestProxyMethods(t *testing.T) {
 		t.Fatalf("failed to toggle item: %v", err)
 	}
 
-	// Check items list is empty
+	// Check items list has only the base item
 	stored, _ := svc.GetListByID(list.ID)
-	if len(stored.Items) != 0 {
-		t.Errorf("expected 0 active items after toggle, got %d", len(stored.Items))
+	if len(stored.Items) != 1 {
+		t.Errorf("expected 1 active item after toggle, got %d", len(stored.Items))
 	}
 
 	// Toggle item back on (restore)
@@ -198,8 +244,8 @@ func TestProxyMethods(t *testing.T) {
 		t.Fatalf("failed to restore item: %v", err)
 	}
 	stored, _ = svc.GetListByID(list.ID)
-	if len(stored.Items) != 1 {
-		t.Errorf("expected 1 active item after restore toggle, got %d", len(stored.Items))
+	if len(stored.Items) != 2 {
+		t.Errorf("expected 2 active items after restore toggle, got %d", len(stored.Items))
 	}
 
 	// Delete item
@@ -207,8 +253,8 @@ func TestProxyMethods(t *testing.T) {
 		t.Fatalf("failed to delete item: %v", err)
 	}
 	stored, _ = svc.GetListByID(list.ID)
-	if len(stored.Items) != 0 {
-		t.Errorf("expected 0 items after delete, got %d", len(stored.Items))
+	if len(stored.Items) != 1 {
+		t.Errorf("expected 1 item after delete, got %d", len(stored.Items))
 	}
 
 	// Delete list

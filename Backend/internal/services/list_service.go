@@ -32,9 +32,20 @@ func (s *ListService) CreateList(list *domain.List) error {
 	if list.OwnerID == "" {
 		return errors.New("owner ID cannot be empty")
 	}
+	if len(list.Items) == 0 {
+		return errors.New("list must contain at least one item")
+	}
 
 	if list.ID == "" {
 		list.ID = uuid.New().String()
+	}
+
+	// Validate and configure nested items
+	for i := range list.Items {
+		if err := validateItem(&list.Items[i]); err != nil {
+			return err
+		}
+		list.Items[i].ListID = list.ID
 	}
 
 	now := time.Now()
@@ -62,6 +73,15 @@ func (s *ListService) AddItemToList(listID string, item *domain.Item) error {
 	if listID == "" {
 		return errors.New("list ID cannot be empty")
 	}
+	if err := validateItem(item); err != nil {
+		return err
+	}
+
+	item.ListID = listID
+	return s.repo.AddItemToList(listID, item)
+}
+
+func validateItem(item *domain.Item) error {
 	if item == nil {
 		return errors.New("item cannot be nil")
 	}
@@ -74,9 +94,7 @@ func (s *ListService) AddItemToList(listID string, item *domain.Item) error {
 	if item.Quantity <= 0 {
 		return errors.New("quantity must be greater than zero")
 	}
-
-	item.ListID = listID
-	return s.repo.AddItemToList(listID, item)
+	return nil
 }
 
 // ToggleItem toggles the active state of an item in a list.

@@ -500,6 +500,13 @@ const docTemplate = `{
                     "type": "boolean",
                     "example": true
                 },
+                "items": {
+                    "description": "Initial list of items mandatory during list creation",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/http.addItemRequest"
+                    }
+                },
                 "listType": {
                     "description": "The accessibility type of the list (PRIVATE or PUBLIC)",
                     "type": "string",

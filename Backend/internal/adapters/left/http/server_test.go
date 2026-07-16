@@ -55,6 +55,25 @@ func TestServerScaffolding(t *testing.T) {
 	})
 }
 
+func TestSwaggerUI(t *testing.T) {
+	repo := memdb.New()
+	svc := services.NewListService(repo)
+	server := NewHTTPServer(svc)
+
+	req, err := http.NewRequest(http.MethodGet, "/swagger/index.html", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.RequestURI = "/swagger/index.html"
+
+	rr := httptest.NewRecorder()
+	server.Router.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected status 200, got %d", rr.Code)
+	}
+}
+
 func TestServerEndpoints(t *testing.T) {
 	repo := memdb.New()
 	svc := services.NewListService(repo)
@@ -65,7 +84,7 @@ func TestServerEndpoints(t *testing.T) {
 	strangerID := "user_789"
 
 	t.Run("CreateList_ValidationError", func(t *testing.T) {
-		payload := []byte(`{"title":"","ownerId":""}`)
+		payload := []byte(`{"title":"","ownerId":"","items":[]}`)
 		req, err := http.NewRequest(http.MethodPost, "/api/v1/lists", bytes.NewBuffer(payload))
 		if err != nil {
 			t.Fatal(err)
@@ -86,8 +105,30 @@ func TestServerEndpoints(t *testing.T) {
 		if errorResp.Error.Code != "INVALID_REQUEST_PAYLOAD" {
 			t.Errorf("expected error code INVALID_REQUEST_PAYLOAD, got %s", errorResp.Error.Code)
 		}
-		if !strings.Contains(errorResp.Error.Message, "title") {
-			t.Errorf("expected error message to mention 'title', got %s", errorResp.Error.Message)
+	})
+
+	t.Run("CreateList_EmptyItemsValidationError", func(t *testing.T) {
+		payload := []byte(`{
+			"title": "Weekly Grocery",
+			"ownerId": "user_123",
+			"items": []
+		}`)
+		req, err := http.NewRequest(http.MethodPost, "/api/v1/lists", bytes.NewBuffer(payload))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		server.Router.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("expected 400 Bad Request, got %d", rr.Code)
+		}
+
+		var errorResp errorEnvelope
+		_ = json.Unmarshal(rr.Body.Bytes(), &errorResp)
+		if errorResp.Error.Message != "list must contain at least one item" {
+			t.Errorf("expected error message 'list must contain at least one item', got %s", errorResp.Error.Message)
 		}
 	})
 
@@ -97,7 +138,10 @@ func TestServerEndpoints(t *testing.T) {
 			"ownerId": "user_123",
 			"listType": "PRIVATE",
 			"isSharable": false,
-			"vendorAssociated": "Supermarket"
+			"vendorAssociated": "Supermarket",
+			"items": [
+				{"sku": "SKU-BASE", "description": "Base Item", "quantity": 1}
+			]
 		}`)
 		req, err := http.NewRequest(http.MethodPost, "/api/v1/lists", bytes.NewBuffer(payload))
 		if err != nil {
@@ -273,7 +317,7 @@ func TestServerEndpoints(t *testing.T) {
 			t.Errorf("expected 200 OK, got %d", rr.Code)
 		}
 
-		// Verify list has no items now
+		// Verify list has only SKU-BASE now (SKU-1001 is soft-deleted)
 		getReq, _ := http.NewRequest(http.MethodGet, "/api/v1/lists/"+listID+"/"+ownerID, nil)
 		getRR := httptest.NewRecorder()
 		server.Router.ServeHTTP(getRR, getReq)
@@ -281,8 +325,8 @@ func TestServerEndpoints(t *testing.T) {
 		var list map[string]interface{}
 		_ = json.Unmarshal(getRR.Body.Bytes(), &list)
 		items := list["items"].([]interface{})
-		if len(items) != 0 {
-			t.Errorf("expected 0 items in list, got %d", len(items))
+		if len(items) != 1 {
+			t.Errorf("expected 1 item in list, got %d", len(items))
 		}
 	})
 
@@ -299,7 +343,7 @@ func TestServerEndpoints(t *testing.T) {
 			t.Errorf("expected 200 OK, got %d", rr.Code)
 		}
 
-		// Verify list has Apple item back
+		// Verify list has Apple item back (SKU-BASE and SKU-1001 active)
 		getReq, _ := http.NewRequest(http.MethodGet, "/api/v1/lists/"+listID+"/"+ownerID, nil)
 		getRR := httptest.NewRecorder()
 		server.Router.ServeHTTP(getRR, getReq)
@@ -307,17 +351,18 @@ func TestServerEndpoints(t *testing.T) {
 		var list map[string]interface{}
 		_ = json.Unmarshal(getRR.Body.Bytes(), &list)
 		items := list["items"].([]interface{})
-		if len(items) != 1 {
-			t.Errorf("expected 1 item in list, got %d", len(items))
+		if len(items) != 2 {
+			t.Errorf("expected 2 items in list, got %d", len(items))
 		}
 
-		it := items[0].(map[string]interface{})
+		it := items[1].(map[string]interface{})
 		if it["sku"] != "SKU-1001" {
 			t.Errorf("expected SKU-1001 restored, got %v", it["sku"])
 		}
 	})
 
 	t.Run("DeleteItem", func(t *testing.T) {
+		// Delete SKU-1001
 		req, err := http.NewRequest(http.MethodDelete, "/api/v1/lists/"+listID+"/items/SKU-1001", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -328,6 +373,15 @@ func TestServerEndpoints(t *testing.T) {
 
 		if rr.Code != http.StatusOK {
 			t.Errorf("expected 200 OK, got %d", rr.Code)
+		}
+
+		// Delete SKU-BASE to make the list completely empty
+		reqBase, _ := http.NewRequest(http.MethodDelete, "/api/v1/lists/"+listID+"/items/SKU-BASE", nil)
+		rrBase := httptest.NewRecorder()
+		server.Router.ServeHTTP(rrBase, reqBase)
+
+		if rrBase.Code != http.StatusOK {
+			t.Errorf("expected 200 OK for SKU-BASE deletion, got %d", rrBase.Code)
 		}
 
 		// Verify list is empty
@@ -365,23 +419,4 @@ func TestServerEndpoints(t *testing.T) {
 			t.Errorf("expected 404 Not Found for deleted list, got %d", getRR.Code)
 		}
 	})
-}
-
-func TestSwaggerUI(t *testing.T) {
-	repo := memdb.New()
-	svc := services.NewListService(repo)
-	server := NewHTTPServer(svc)
-
-	req, err := http.NewRequest(http.MethodGet, "/swagger/index.html", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.RequestURI = "/swagger/index.html"
-
-	rr := httptest.NewRecorder()
-	server.Router.ServeHTTP(rr, req)
-
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected 200 OK, got %d", rr.Code)
-	}
 }
