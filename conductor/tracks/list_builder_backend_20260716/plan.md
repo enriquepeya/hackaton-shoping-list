@@ -41,4 +41,4 @@ This plan breaks down the development of the "List-Builder" backend service into
     - [x] Implement HTTP controllers mapping JSON requests/responses using camelCase fields
     - [x] Implement error helper mapping standard domains to `{ "error": { "code": "...", "message": "..." } }`
     - [x] Verify all controller/integration tests pass (Green Phase)
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Inbound REST Controllers with Go Chi' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Inbound REST Controllers with Go Chi' (Protocol in workflow.md)
