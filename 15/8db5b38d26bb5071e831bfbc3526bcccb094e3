@@ -1,0 +1,26 @@
+Backend/internal/adapters/left/http/server.go
+  s_4e36745035151e::t_cb50cc43047951 4,6-7,34,37-44,65-91,94-249
+Backend/cmd/api/main.go
+  s_4e36745035151e::t_a8549d37fbd4cc 1-63
+Backend/internal/adapters/left/http/server_test.go
+  s_4e36745035151e::t_443d43a2e17219 4-5,8,34-36,57-367
+  s_4e36745035151e::t_721b2dd4880228 368
+Backend/internal/domain/models.go
+  s_4e36745035151e::t_360cf1c7dd547a 7-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "158db5b38d26bb5071e831bfbc3526bcccb094e3",
+  "prompts": {},
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
