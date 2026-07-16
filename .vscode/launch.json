@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch List-Builder Go API",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "${workspaceFolder}/Backend/cmd/api/main.go",
+      "cwd": "${workspaceFolder}/Backend",
+      "env": {
+        "PORT": "8080"
+      }
+    },
+    {
+      "name": "Run All Go Tests",
+      "type": "go",
+      "request": "launch",
+      "mode": "test",
+      "program": "${workspaceFolder}/Backend/internal/...",
+      "cwd": "${workspaceFolder}/Backend"
+    }
+  ]
+}

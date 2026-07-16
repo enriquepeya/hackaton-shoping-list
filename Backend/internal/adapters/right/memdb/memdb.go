@@ -2,7 +2,10 @@ package memdb
 
 import (
 	"backend/internal/domain"
+	"encoding/json"
 	"errors"
+	"flag"
+	"os"
 	"sync"
 )
 
@@ -13,12 +16,44 @@ type MemDB struct {
 	deletedItems map[string][]domain.Item
 }
 
-// New creates and returns a new instance of MemDB.
+// New creates and returns a new instance of MemDB with pre-populated seed data from JSON.
 func New() *MemDB {
-	return &MemDB{
+	db := &MemDB{
 		lists:        make(map[string]*domain.List),
 		deletedItems: make(map[string][]domain.Item),
 	}
+	// Avoid loading seed data during unit tests to preserve test isolation and determinism
+	if flag.Lookup("test.v") == nil {
+		_ = db.loadSeedData("seed_data.json")
+	}
+	return db
+}
+
+// loadSeedData loads pre-configured seed lists from a separate JSON file.
+func (db *MemDB) loadSeedData(filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		// Fallback paths to support running unit tests inside nested subdirectories
+		file, err = os.Open("../../../seed_data.json")
+		if err != nil {
+			file, err = os.Open("../../../../seed_data.json")
+			if err != nil {
+				return nil // Gracefully start empty if file is completely unreachable
+			}
+		}
+	}
+	defer file.Close()
+
+	var seededLists []domain.List
+	if err := json.NewDecoder(file).Decode(&seededLists); err != nil {
+		return err
+	}
+
+	for i := range seededLists {
+		l := seededLists[i]
+		db.lists[l.ID] = &l
+	}
+	return nil
 }
 
 // copyList creates a deep copy of a domain.List structure to ensure concurrency safety.

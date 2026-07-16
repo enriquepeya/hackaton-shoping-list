@@ -1,0 +1,70 @@
+[
+  {
+    "id": "list-grocery-001",
+    "title": "Weekly Grocery List",
+    "items": [
+      {
+        "sku": "SKU-1001",
+        "ean": "1234567890123",
+        "listId": "list-grocery-001",
+        "description": "Red Apples",
+        "quantity": 5,
+        "addedByUserId": "user_123"
+      },
+      {
+        "sku": "SKU-1002",
+        "ean": "9876543210987",
+        "listId": "list-grocery-001",
+        "description": "Whole Milk",
+        "quantity": 2,
+        "addedByUserId": "user_123"
+      }
+    ],
+    "vendorAssociated": "Supermarket",
+    "ownerId": "user_123",
+    "listType": "PUBLIC",
+    "isSharable": true,
+    "image": "https://example.com/grocery.png",
+    "createdAt": "2026-07-16T16:25:00Z",
+    "updatedAt": "2026-07-16T16:25:00Z",
+    "lastPurchaseDate": "2026-07-16T16:25:00Z",
+    "addedByUserId": "user_123"
+  },
+  {
+    "id": "list-supplies-002",
+    "title": "Office Supplies List",
+    "items": [
+      {
+        "sku": "SKU-2001",
+        "ean": null,
+        "listId": "list-supplies-002",
+        "description": "Notebooks",
+        "quantity": 10,
+        "addedByUserId": "user_456"
+      }
+    ],
+    "vendorAssociated": "Stationery-Plus",
+    "ownerId": "user_456",
+    "listType": "PRIVATE",
+    "isSharable": true,
+    "image": "https://example.com/supplies.png",
+    "createdAt": "2026-07-16T16:25:00Z",
+    "updatedAt": "2026-07-16T16:25:00Z",
+    "lastPurchaseDate": "2026-07-16T16:25:00Z",
+    "addedByUserId": "user_456"
+  },
+  {
+    "id": "list-private-003",
+    "title": "Secret Party Planning",
+    "items": [],
+    "vendorAssociated": null,
+    "ownerId": "user_123",
+    "listType": "PRIVATE",
+    "isSharable": false,
+    "image": "",
+    "createdAt": "2026-07-16T16:25:00Z",
+    "updatedAt": "2026-07-16T16:25:00Z",
+    "lastPurchaseDate": "2026-07-16T16:25:00Z",
+    "addedByUserId": "user_123"
+  }
+]
