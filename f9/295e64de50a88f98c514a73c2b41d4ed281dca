@@ -1,0 +1,20 @@
+conductor/tracks/list_builder_backend_20260716/plan.md
+  s_4e36745035151e::t_b7bc3021aef6dc 27-30
+  s_4e36745035151e::t_eecce92fd51bd9 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f9295e64de50a88f98c514a73c2b41d4ed281dca",
+  "prompts": {},
+  "sessions": {
+    "s_4e36745035151e": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "4984783c-d4ba-465e-8398-f4fa6abe6c76",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
