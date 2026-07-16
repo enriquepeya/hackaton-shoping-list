@@ -36,9 +36,9 @@ This plan breaks down the development of the "List-Builder" backend service into
     - [x] Write failing router configuration tests checking middleware, CORS, and routing setup
     - [x] Scaffolding `cmd/api/main.go` and Go Chi Router in `internal/adapters/left/http/server.go`
     - [x] Verify router/middleware tests pass (Green Phase)
-- [ ] Task: Implement REST Endpoints
-    - [ ] Write failing integration/controller tests for all five list endpoints (checking camelCase, HTTP status, and error envelopes)
-    - [ ] Implement HTTP controllers mapping JSON requests/responses using camelCase fields
-    - [ ] Implement error helper mapping standard domains to `{ "error": { "code": "...", "message": "..." } }`
-    - [ ] Verify all controller/integration tests pass (Green Phase)
+- [x] Task: Implement REST Endpoints (158db5b)
+    - [x] Write failing integration/controller tests for all five list endpoints (checking camelCase, HTTP status, and error envelopes)
+    - [x] Implement HTTP controllers mapping JSON requests/responses using camelCase fields
+    - [x] Implement error helper mapping standard domains to `{ "error": { "code": "...", "message": "..." } }`
+    - [x] Verify all controller/integration tests pass (Green Phase)
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Inbound REST Controllers with Go Chi' (Protocol in workflow.md)
