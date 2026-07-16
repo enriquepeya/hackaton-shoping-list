@@ -20,7 +20,7 @@ This plan breaks down the development of the "List-Builder" backend service into
     - [x] Implement `MemDB` adapter using `map[string]*domain.List` protected by `sync.RWMutex`
     - [x] Verify that all repository unit tests pass (Green Phase)
     - [x] Verify database concurrency safety with automated concurrent test runs
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Concurrency-Safe Memory DB Adapter' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Concurrency-Safe Memory DB Adapter' (Protocol in workflow.md)
 
 ## Phase 3: Core Business Logic Service Layer
 
