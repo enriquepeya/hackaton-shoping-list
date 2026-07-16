@@ -28,4 +28,4 @@ This plan details the step-by-step implementation of declarative Swaggo-based Sw
     - [x] Annotate the standard health check handler and all 7 list/item CRUD and Toggle endpoints in `Backend/internal/adapters/left/http/server.go` with Swaggo param/response metadata
     - [x] Execute `swag init -g cmd/api/main.go` inside the `Backend` directory to compile all comments into static OpenAPI docs under `Backend/docs/`
     - [x] Confirm all unit and integration tests continue to compile and pass cleanly
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Document REST Handlers and Compile OpenAPI Docs' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Document REST Handlers and Compile OpenAPI Docs' (Protocol in workflow.md)
