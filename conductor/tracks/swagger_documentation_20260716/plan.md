@@ -19,7 +19,7 @@ This plan details the step-by-step implementation of declarative Swaggo-based Sw
     - [x] Add Swaggo struct-level field comments to `domain.Item`, `domain.List`, `domain.User` in `Backend/internal/domain/models.go`
     - [x] Add Swaggo comments to request payload structs (`createListRequest`, `addItemRequest`) and standard error structs (`errorEnvelope`, `errorDetails`)
     - [x] Verify that the packages build successfully without any syntax errors
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Annotate Data Models and Schemas' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Annotate Data Models and Schemas' (Protocol in workflow.md)
 
 ## Phase 3: Document REST Handlers and Compile OpenAPI Docs
 
