@@ -9,8 +9,8 @@ This plan breaks down the development of the "List-Builder" backend service into
 - [x] Task: Create Domain Model Structures (f4ee202)
     - [x] Write domain structure unit tests or verification in `internal/domain`
     - [x] Implement `domain.Item`, `domain.List`, and `domain.User` structs (no JSON tags or routing dependencies)
-- [ ] Task: Define Port Interfaces
-    - [ ] Define `ListRepository` outbound port in `internal/ports` with all list/item lifecycle operations
+- [x] Task: Define Port Interfaces (56c1845)
+    - [x] Define `ListRepository` outbound port in `internal/ports` with all list/item lifecycle operations
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Domain and Repository Ports Setup' (Protocol in workflow.md)
 
 ## Phase 2: Concurrency-Safe Memory DB Adapter
