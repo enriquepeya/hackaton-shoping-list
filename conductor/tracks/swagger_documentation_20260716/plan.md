@@ -6,11 +6,11 @@ This plan details the step-by-step implementation of declarative Swaggo-based Sw
 
 ## Phase 1: dependencies & base router scaffolding
 
-- [ ] Task: Initialize Swagger UI Router and Dependencies
-    - [ ] Write failing router unit tests checking that a request to `/swagger/index.html` initiates a valid router action (Red Phase)
-    - [ ] Install packages `github.com/swaggo/swag/cmd/swag` and `github.com/swaggo/http-swagger` in `Backend` directory
-    - [ ] Import generated docs folder in `Backend/cmd/api/main.go` and mount http-swagger handler in `Backend/internal/adapters/left/http/server.go`
-    - [ ] Verify that router compilation and router tests pass successfully (Green Phase)
+- [x] Task: Initialize Swagger UI Router and Dependencies (29d70f3)
+    - [x] Write failing router unit tests checking that a request to `/swagger/index.html` initiates a valid router action (Red Phase)
+    - [x] Install packages `github.com/swaggo/swag/cmd/swag` and `github.com/swaggo/http-swagger` in `Backend` directory
+    - [x] Import generated docs folder in `Backend/cmd/api/main.go` and mount http-swagger handler in `Backend/internal/adapters/left/http/server.go`
+    - [x] Verify that router compilation and router tests pass successfully (Green Phase)
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: dependencies & base router scaffolding' (Protocol in workflow.md)
 
 ## Phase 2: Annotate Data Models and Schemas
