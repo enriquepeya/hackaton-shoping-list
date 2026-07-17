@@ -53,6 +53,16 @@ export default function Home() {
   const [loadingType, setLoadingType] = useState<"text" | "image" | "audio" | null>(null);
   const [showCameraOptions, setShowCameraOptions] = useState(false);
 
+  // OCR simulation states
+  const [isOcrAnalyzing, setIsOcrAnalyzing] = useState(false);
+  const [ocrStep, setOcrStep] = useState(0);
+
+  // Share modal and Shared List View states (Requirements 3 & 4)
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [isCopied, setIsCopied] = useState(false);
+  const [sharedListView, setSharedListView] = useState<AIResponse | null>(null);
+
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +130,47 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [isSuccess, successCountdown]);
 
+  // Listen for 'share' query parameter on load
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const shareParam = params.get("share");
+      if (shareParam) {
+        // Set the shared list view mock data (Requirement 4)
+        setSharedListView({
+          list_title: "Lista compartida por tu amigo",
+          description: "Ingredientes para asado completo compartidos mediante enlace.",
+          items: [
+            { name: "Vacio de novillo", brand: "Carnicería Express", quantity: 1, size: "1.5 kg" },
+            { name: "Chorizo bombón", brand: "La Octava", quantity: 5, size: "500g" },
+            { name: "Papas Fritas Lays", brand: "Lays", quantity: 2, size: "150 g" },
+            { name: "Coca Cola Original", brand: "Coca-Cola", quantity: 2, size: "1.5L" }
+          ],
+          suggested_stores: [
+            { store_name: "PedidosYa Market", total_price: 18500, eta: "15 - 20 min", badge: "Más rápido" }
+          ]
+        });
+      }
+    }
+  }, []);
+
+  const handleShareList = (title: string, listId: string = "list-abc") => {
+    if (typeof window !== "undefined") {
+      const url = `${window.location.origin}/?share=${listId}`;
+      setShareUrl(url);
+      setIsCopied(false);
+      setShowShareModal(true);
+    }
+  };
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(shareUrl);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
+
   // Submit prompt / image / audio to API
   const handleGenerateList = async (
     promptText: string = "",
@@ -162,6 +213,27 @@ export default function Home() {
     }
   };
 
+  // Triggered when an image file is captured/uploaded
+  const triggerOcrAnalysis = (base64String: string) => {
+    setIsOcrAnalyzing(true);
+    setOcrStep(0);
+    setActiveTab("build");
+    setShowLauncher(false);
+
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      setOcrStep(step);
+      if (step >= 5) {
+        clearInterval(interval);
+        setTimeout(async () => {
+          setIsOcrAnalyzing(false);
+          await handleGenerateList("", base64String, "image");
+        }, 800);
+      }
+    }, 500);
+  };
+
   // Read and convert chosen file to base64
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -179,7 +251,11 @@ export default function Home() {
     const reader = new FileReader();
     reader.onloadend = async () => {
       const base64String = reader.result as string;
-      await handleGenerateList("", base64String, type);
+      if (type === "image") {
+        triggerOcrAnalysis(base64String);
+      } else {
+        await handleGenerateList("", base64String, type);
+      }
     };
     reader.readAsDataURL(file);
     
@@ -805,9 +881,18 @@ export default function Home() {
               <div className="space-y-4 animate-fadeIn">
                 
                 {/* Result header details */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-extrabold text-gray-800">{generatedList.list_title}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{generatedList.description}</p>
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start animate-fadeIn">
+                  <div className="flex-1 mr-2">
+                    <h3 className="text-xl font-extrabold text-gray-800">{generatedList.list_title}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{generatedList.description}</p>
+                  </div>
+                  <button
+                    onClick={() => handleShareList(generatedList.list_title, "list-123")}
+                    className="flex-shrink-0 bg-red-50 hover:bg-red-100 text-[#e21247] font-extrabold text-[10px] px-3 py-1.5 rounded-full transition-all active:scale-95 flex items-center gap-1 cursor-pointer border border-red-100/50 uppercase tracking-wider"
+                    title="Compartir esta lista"
+                  >
+                    <span>🔗 Compartir</span>
+                  </button>
                 </div>
 
                 {/* Items container details */}
@@ -896,7 +981,47 @@ export default function Home() {
             )}
 
             {/* Empty landing view / Loading state card */}
-            {!generatedList && isLoading && (
+            {isOcrAnalyzing && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 space-y-4 animate-fadeIn max-w-sm mx-auto">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                  <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                    🔍 IA LEYENDO MANUSCRITO
+                  </h3>
+                  <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></span>
+                </div>
+                
+                {/* Simulated preview of the paper list */}
+                <div className="bg-yellow-50/70 border border-yellow-100 rounded-xl p-4 shadow-inner relative overflow-hidden h-44 flex flex-col justify-between">
+                  <div className="absolute right-2 top-2 text-2xl opacity-15">📝</div>
+                  <div className="space-y-2.5 font-mono text-[10px] text-gray-600">
+                    <p className={`transition-all duration-300 ${ocrStep >= 1 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                      [Línea 1] Leche entera x2 ................ [✓ LECTURA OK]
+                    </p>
+                    <p className={`transition-all duration-300 ${ocrStep >= 2 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                      [Línea 2] Huevos x6 ....................... [✓ LECTURA OK]
+                    </p>
+                    <p className={`transition-all duration-300 ${ocrStep >= 3 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                      [Línea 3] Harina de trigo x1 .............. [✓ LECTURA OK]
+                    </p>
+                    <p className={`transition-all duration-300 ${ocrStep >= 4 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                      [Línea 4] Tomates perita x1 ............... [✓ LECTURA OK]
+                    </p>
+                    <p className={`transition-all duration-300 ${ocrStep >= 5 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                      [Línea 5] Queso rallado x2 ................ [✓ LECTURA OK]
+                    </p>
+                  </div>
+                  <div className="text-[9px] font-bold text-gray-400 text-center uppercase tracking-widest pt-2">
+                    {ocrStep < 5 ? "Extrayendo productos..." : "Análisis completado de forma exitosa"}
+                  </div>
+                </div>
+
+                <div className="flex justify-center pt-2">
+                  <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              </div>
+            )}
+
+            {!generatedList && isLoading && !isOcrAnalyzing && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-8 text-center space-y-4 max-w-sm mx-auto animate-pulse mt-8">
                 <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center text-3xl">
                   {loadingType === "image" ? "📸" : loadingType === "audio" ? "🎙️" : "🤖"}
@@ -987,7 +1112,15 @@ export default function Home() {
                     </div>
                   </div>
                   <p className="text-xs font-bold text-gray-800 mt-2 text-left">Desayuno</p>
-                  <p className="text-[10px] text-gray-400 font-medium text-left">20 productos</p>
+                  <div className="flex justify-between items-center mt-0.5">
+                    <p className="text-[10px] text-gray-400 font-medium">20 productos</p>
+                    <button
+                      onClick={() => handleShareList("Desayuno", "list-desayuno")}
+                      className="text-[9px] text-[#e21247] hover:underline font-extrabold flex items-center gap-0.5 focus:outline-none cursor-pointer"
+                    >
+                      🔗 Compartir
+                    </button>
+                  </div>
                 </div>
 
                 {/* 3. Hardcoded Café Martínez Desayuno list */}
@@ -1006,7 +1139,15 @@ export default function Home() {
                     </span>
                     <span className="text-xs font-bold text-gray-800 leading-none">Desayuno</span>
                   </div>
-                  <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">3 productos</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <p className="text-[10px] text-gray-400 font-medium">3 productos</p>
+                    <button
+                      onClick={() => handleShareList("Desayuno Martínez", "list-martinez")}
+                      className="text-[9px] text-[#e21247] hover:underline font-extrabold flex items-center gap-0.5 focus:outline-none cursor-pointer"
+                    >
+                      🔗 Compartir
+                    </button>
+                  </div>
                 </div>
 
                 {/* Dynamically created lists from the Go hexagonal backend! */}
@@ -1032,9 +1173,17 @@ export default function Home() {
                       </span>
                       <span className="text-xs font-bold text-gray-800 leading-none truncate">{list.title}</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">
-                      {list.items.reduce((sum, item) => sum + item.quantity, 0)} productos
-                    </p>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-[10px] text-gray-400 font-medium text-left">
+                        {list.items.reduce((sum, item) => sum + item.quantity, 0)} productos
+                      </p>
+                      <button
+                        onClick={() => handleShareList(list.title, list.id)}
+                        className="text-[9px] text-[#e21247] hover:underline font-extrabold flex items-center gap-0.5 focus:outline-none cursor-pointer"
+                      >
+                        🔗 Compartir
+                      </button>
+                    </div>
                   </div>
                 ))}
 
@@ -1375,6 +1524,183 @@ export default function Home() {
         className="hidden" 
         onChange={(e) => handleFileChange(e, "audio")} 
       />
+
+      {/* Share Modal Dialog (Requirements 3 & 4) */}
+      {showShareModal && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl border border-gray-100 animate-scaleUp pointer-events-auto">
+            
+            <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+              <h3 className="text-base font-extrabold text-gray-800 flex items-center gap-1.5">
+                🔗 Compartir Lista
+              </h3>
+              <button 
+                onClick={() => setShowShareModal(false)}
+                className="text-gray-400 hover:text-gray-600 font-bold text-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500">
+              ¡Cualquier persona con este enlace podrá ver, modificar o importar esta lista directamente en su propia aplicación!
+            </p>
+
+            {/* Input URL field with Copy button */}
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-2.5 flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-gray-600 truncate mr-2 flex-1">
+                {shareUrl}
+              </span>
+              <button
+                onClick={handleCopyLink}
+                className={`flex-shrink-0 font-extrabold text-[10px] px-3 py-1.5 rounded-lg transition-all ${
+                  isCopied 
+                    ? "bg-green-500 text-white" 
+                    : "bg-red-600 hover:bg-red-700 text-white"
+                }`}
+              >
+                {isCopied ? "✓ ¡Copiado!" : "Copiar"}
+              </button>
+            </div>
+
+            {/* Simulated Share Targets (WhatsApp, Slack, Email) */}
+            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+              <a 
+                href={`https://wa.me/?text=${encodeURIComponent("Mirá mi lista de compras en PedidosYa: " + shareUrl)}`} 
+                target="_blank" 
+                rel="noreferrer"
+                className="bg-green-50 hover:bg-green-100 border border-green-100 rounded-xl p-2 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all active:scale-95"
+              >
+                <span className="text-xl">💬</span>
+                <span className="text-[9px] font-bold text-green-700 uppercase tracking-wide">WhatsApp</span>
+              </a>
+              <button 
+                onClick={handleCopyLink}
+                className="bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-xl p-2 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all active:scale-95"
+              >
+                <span className="text-xl">🤖</span>
+                <span className="text-[9px] font-bold text-blue-700 uppercase tracking-wide">Slack</span>
+              </button>
+              <button 
+                onClick={() => {
+                  window.location.href = `?share=list-123`;
+                  setShowShareModal(false);
+                }}
+                className="bg-red-50 hover:bg-red-100 border border-red-100 rounded-xl p-2 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 animate-pulse"
+              >
+                <span className="text-xl">📱</span>
+                <span className="text-[9px] font-bold text-[#e21247] uppercase tracking-wide">Ver Vista</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* TAB X: SHARED LIST PREVIEW SCREEN (Requirement 4) */}
+      {sharedListView && (
+        <div className="absolute inset-0 bg-white z-40 flex flex-col justify-between animate-fadeIn">
+          {/* Header */}
+          <header className="bg-[#e21247] p-4 text-white flex items-center justify-between shadow-md">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">📋</span>
+              <span className="text-base font-extrabold tracking-tight">Lista Compartida</span>
+            </div>
+            <button 
+              onClick={() => {
+                setSharedListView(null);
+                // Clear URL share param
+                if (typeof window !== "undefined") {
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }
+              }}
+              className="text-xs bg-black/20 hover:bg-black/40 text-white font-extrabold px-3 py-1.5 rounded-full transition-all active:scale-95"
+            >
+              Cerrar
+            </button>
+          </header>
+
+          {/* List Content */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 pb-20">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <h3 className="text-lg font-black text-gray-800">{sharedListView.list_title}</h3>
+              <p className="text-xs text-gray-500 mt-1">{sharedListView.description}</p>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+              <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2">
+                Productos recomendados
+              </h4>
+              <div className="space-y-3 divide-y divide-gray-50">
+                {sharedListView.items.map((item, idx) => (
+                  <div key={idx} className="pt-2 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-gray-800">{item.name}</p>
+                      <p className="text-xs text-gray-400">Marca: {item.brand} • {item.size}</p>
+                    </div>
+                    <span className="text-xs bg-red-50 text-red-600 font-extrabold px-2.5 py-1 rounded-md">
+                      x{item.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 space-y-3">
+              <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider border-b border-gray-100 pb-2">
+                Proveedor sugerido
+              </h4>
+              {sharedListView.suggested_stores.map((store, sIdx) => (
+                <div key={sIdx} className="flex justify-between items-center text-xs">
+                  <div>
+                    <p className="font-extrabold text-gray-800">{store.store_name}</p>
+                    <p className="text-gray-400">ETA: {store.eta}</p>
+                  </div>
+                  <p className="font-extrabold text-gray-900 text-sm">
+                    ${store.total_price.toLocaleString("es-AR")}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Import Action Bottom Panel */}
+          <div className="bg-white p-4 border-t border-gray-100 flex gap-2 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-20">
+            <button
+              onClick={() => {
+                // Import the list into savedLists
+                const newList: SavedList = {
+                  id: "list-imported-" + Date.now(),
+                  title: sharedListView.list_title,
+                  description: sharedListView.description,
+                  vendorAssociated: sharedListView.suggested_stores[0]?.store_name || "PedidosYa Market",
+                  items: sharedListView.items.map((it, iIdx) => ({
+                    sku: "sku-imp-" + iIdx,
+                    description: it.name,
+                    quantity: it.quantity,
+                    addedByUserId: "user-imported"
+                  }))
+                };
+                
+                // Save list locally
+                setSavedLists(prev => [newList, ...prev]);
+                setSharedListView(null);
+                setActiveTab("lists");
+                
+                // Clear URL query param
+                if (typeof window !== "undefined") {
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
+                alert("¡Lista importada con éxito a 'Mis Listas'! 🎉");
+              }}
+              className="flex-1 bg-red-600 hover:bg-red-700 active:scale-95 text-white font-extrabold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md shadow-red-100 flex items-center justify-center gap-1.5 cursor-pointer uppercase tracking-wider"
+            >
+              📥 Importar a mis listas
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
