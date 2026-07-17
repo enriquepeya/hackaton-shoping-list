@@ -12,7 +12,7 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
     - [ ] Scaffold the main application wrapper centered using class names `"max-w-md mx-auto min-h-screen bg-white shadow-xl relative overflow-hidden"`
     - [ ] Add basic routing, custom navigation tabs, and default empty state components
 
-## Phase 2: AI Shopping Assistant BFF Route
+## Phase 2: AI Shopping Assistant BFF Route [checkpoint: 973036d]
 - [x] Task: Implement AI BFF Endpoint (6b27fda)
     - [ ] Scaffold Next.js API Route `/api/generate-list` accepting a POST request with the user prompt
     - [ ] Inject the System Prompt from `FrontEnd/specs/AGENT.MD` into the LLM SDK client call
