@@ -13,7 +13,7 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
     - [ ] Add basic routing, custom navigation tabs, and default empty state components
 
 ## Phase 2: AI Shopping Assistant BFF Route
-- [ ] Task: Implement AI BFF Endpoint
+- [x] Task: Implement AI BFF Endpoint (6b27fda)
     - [ ] Scaffold Next.js API Route `/api/generate-list` accepting a POST request with the user prompt
     - [ ] Inject the System Prompt from `FrontEnd/specs/AGENT.MD` into the LLM SDK client call
     - [ ] Implement fallback mock logic (returning predefined lists for "Asado", "Desayuno", etc.) for offline hackathon testing
