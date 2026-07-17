@@ -1,15 +1,194 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 type Tab = "build" | "lists" | "checkout";
 
+interface AIItem {
+  name: string;
+  brand: string;
+  quantity: number;
+  size: string;
+}
+
+interface SuggestedStore {
+  store_name: string;
+  total_price: number;
+  eta: string;
+  badge: string;
+}
+
+interface AIResponse {
+  list_title: string;
+  description: string;
+  items: AIItem[];
+  suggested_stores: SuggestedStore[];
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("build");
+  const [promptInput, setPromptInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Active generated list state
+  const [generatedList, setGeneratedList] = useState<AIResponse | null>(null);
+  const [activeStoreIndex, setActiveStoreIndex] = useState<number>(0);
+  
+  // Checkout flow state
+  const [priorityShipping, setPriorityShipping] = useState(false);
+  const [riderTip, setRiderTip] = useState<number>(0);
+  const [address, setAddress] = useState("Av. Corrientes 1234, CABA");
+  const [instructions, setInstructions] = useState("Dejar en recepción");
+  
+  // Success state
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [successCountdown, setSuccessCountdown] = useState(8);
+
+  // Saved lists memory (will hook up to Go backend in Phase 4)
+  const [savedLists, setSavedLists] = useState<any[]>([]);
+
+  // Automatic redirect timer on Success Screen
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isSuccess && successCountdown > 0) {
+      timer = setTimeout(() => {
+        setSuccessCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (isSuccess && successCountdown === 0) {
+      setIsSuccess(false);
+      setActiveTab("lists");
+      setSuccessCountdown(8);
+    }
+    return () => clearTimeout(timer);
+  }, [isSuccess, successCountdown]);
+
+  // Submit prompt to API
+  const handleGenerateList = async (promptText: string) => {
+    const text = promptText || promptInput;
+    if (!text.trim()) return;
+
+    setIsLoading(true);
+    setGeneratedList(null);
+
+    try {
+      const response = await fetch("/api/generate-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: text })
+      });
+      
+      if (response.ok) {
+        const data: AIResponse = await response.json();
+        setGeneratedList(data);
+        setActiveStoreIndex(0); // reset store tab selection
+      }
+    } catch (err) {
+      console.error("Error generating list:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Quick chips helper
+  const handleChipClick = (suggestion: string, promptText: string) => {
+    setPromptInput(promptText);
+    handleGenerateList(promptText);
+  };
+
+  // Helper to determine octagons (nutritional alerts) based on brand/name
+  const getOctagons = (item: AIItem) => {
+    const name = item.name.toLowerCase();
+    const brand = item.brand.toLowerCase();
+    
+    const octagons: string[] = [];
+    if (brand.includes("lays") || name.includes("papas") || brand.includes("doritos") || brand.includes("takis")) {
+      octagons.push("EXCESO EN SODIO", "EXCESO EN GRASAS");
+    }
+    if (brand.includes("coca") || name.includes("leche") || name.includes("gaseosa") || name.includes("yogurt")) {
+      octagons.push("EXCESO EN AZÚCARES");
+    }
+    if (brand.includes("branca") || name.includes("fernet")) {
+      octagons.push("EXCESO EN CALORÍAS");
+    }
+    return octagons;
+  };
+
+  // Checkout Math
+  const basePrice = generatedList?.suggested_stores[activeStoreIndex]?.total_price || 0;
+  const deliveryFee = 2000;
+  const priorityFee = priorityShipping ? 750 : 0;
+  const totalPrice = basePrice + deliveryFee + priorityFee + riderTip;
+
+  // Confirm and go to checkout tab
+  const handleProceedToCheckout = () => {
+    setActiveTab("checkout");
+  };
+
+  // Confirm order (trigger Success screen)
+  const handlePlaceOrder = () => {
+    setIsSuccess(true);
+    // Add current list to simulated local memory (Phase 4 will send this to Go back-end)
+    if (generatedList) {
+      const newList = {
+        id: "list-" + Math.random().toString(36).substr(2, 9),
+        title: generatedList.list_title,
+        description: generatedList.description,
+        vendorAssociated: generatedList.suggested_stores[activeStoreIndex]?.store_name || "PedidosYa Market",
+        items: generatedList.items.map(it => ({
+          sku: "SKU-" + Math.floor(1000 + Math.random() * 9000),
+          description: `${it.name} (${it.brand}) ${it.size}`,
+          quantity: it.quantity
+        }))
+      };
+      setSavedLists(prev => [newList, ...prev]);
+    }
+  };
+
+  if (isSuccess) {
+    return (
+      <main className="max-w-md w-full min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col justify-between p-6">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-4xl animate-bounce">
+            🎉
+          </div>
+          <h1 className="text-2xl font-extrabold text-gray-800">¡Gracias por tu pedido!</h1>
+          <p className="text-sm text-gray-500 max-w-xs">
+            Tu orden está siendo procesada en <strong className="text-gray-700">{generatedList?.suggested_stores[activeStoreIndex]?.store_name}</strong>.
+          </p>
+
+          <div className="w-full bg-gray-50 rounded-2xl p-4 border border-gray-100 text-left space-y-3">
+            <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Resumen de Lista Generada</h3>
+            <div className="border-b border-gray-200 pb-2">
+              <p className="text-sm font-bold text-gray-800">{generatedList?.list_title}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{generatedList?.description}</p>
+            </div>
+            <p className="text-xs text-gray-400 font-semibold text-center">
+              Total pagado: ${totalPrice.toLocaleString("es-AR")}
+            </p>
+          </div>
+
+          <div className="w-full space-y-3">
+            <button
+              onClick={() => {
+                setIsSuccess(false);
+                setActiveTab("lists");
+              }}
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-red-100"
+            >
+              Guardar lista para después
+            </button>
+            <p className="text-xs text-gray-400">
+              Redirigiendo automáticamente a "Mis listas" en <span className="font-bold text-red-500">{successCountdown}</span> segundos...
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-md w-full min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col justify-between">
-      {/* 1. Header */}
+      {/* Header */}
       <header className="bg-red-600 text-white p-4 flex items-center justify-between shadow-md">
         <div className="flex items-center space-x-2">
           <span className="text-xl font-bold tracking-tight">List-Builder</span>
@@ -20,62 +199,368 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 2. Main Scrollable Content */}
+      {/* Main viewport */}
       <section className="flex-1 overflow-y-auto p-4 bg-gray-50 pb-20">
+        
+        {/* TAB 1: BUILD (AI PROMPT) */}
         {activeTab === "build" && (
           <div className="space-y-4">
+            
+            {/* Input prompt module */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
               <h2 className="text-lg font-bold text-gray-800 mb-1">¿Qué necesitás hoy?</h2>
               <p className="text-xs text-gray-500 mb-3">Pedí por lenguaje natural y la IA armará tu lista de compras perfecta.</p>
-              <textarea
-                placeholder="Ej. Quiero hacer comida para toda la semana con desayuno proteico..."
-                className="w-full h-24 text-sm border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
-              />
+              
+              <div className="relative">
+                <textarea
+                  value={promptInput}
+                  onChange={(e) => setPromptInput(e.target.value)}
+                  placeholder="Ej. Quiero hacer comida para toda la semana con desayuno proteico..."
+                  className="w-full h-24 text-sm border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+                  disabled={isLoading}
+                />
+              </div>
+
               <div className="flex flex-wrap gap-2 mt-3">
-                <button className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-full transition-all">
+                <button
+                  onClick={() => handleChipClick("Asado", "Quiero hacer un asado para mis amigos")}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
+                  disabled={isLoading}
+                >
                   🔥 Asado Día del amigo
                 </button>
-                <button className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-full transition-all">
+                <button
+                  onClick={() => handleChipClick("Desayuno", "Quiero desayuno proteico para toda la semana")}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
+                  disabled={isLoading}
+                >
                   🍳 Desayuno proteico
                 </button>
-                <button className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-full transition-all">
-                  🥗 Cena saludable
+                <button
+                  onClick={() => handleChipClick("Cena", "Cena saludable rápida wraps de pollo")}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
+                  disabled={isLoading}
+                >
+                  🥗 Cena rápida wraps
                 </button>
               </div>
+
+              <button
+                onClick={() => handleGenerateList("")}
+                disabled={isLoading || !promptInput.trim()}
+                className={`w-full mt-4 font-bold py-3 px-4 rounded-xl transition-all shadow-md ${
+                  isLoading || !promptInput.trim()
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                    : "bg-red-600 hover:bg-red-700 text-white shadow-red-100"
+                }`}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                    🤖 Generando Lista Inteligente...
+                  </span>
+                ) : (
+                  "🤖 Generar Lista Inteligente"
+                )}
+              </button>
             </div>
 
-            {/* Empty state placeholder for now */}
-            <div className="text-center py-12 text-gray-400">
-              <span className="text-4xl">🤖</span>
-              <p className="text-sm font-medium mt-2">La IA está lista para construir tu lista.</p>
-              <p className="text-xs mt-1">Escribí o seleccioná una sugerencia arriba.</p>
-            </div>
+            {/* Generated results visualization */}
+            {generatedList && (
+              <div className="space-y-4 animate-fadeIn">
+                
+                {/* Result header details */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="text-xl font-extrabold text-gray-800">{generatedList.list_title}</h3>
+                  <p className="text-xs text-gray-500 mt-1">{generatedList.description}</p>
+                </div>
+
+                {/* Items container details */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Productos de la lista</h4>
+                    <span className="text-xs bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded-full">
+                      {generatedList.items.length} items
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 divide-y divide-gray-50">
+                    {generatedList.items.map((item, idx) => (
+                      <div key={idx} className="pt-2 flex items-start justify-between">
+                        <div className="space-y-1">
+                          <p className="text-sm font-bold text-gray-800">{item.name}</p>
+                          <p className="text-xs text-gray-400">Marca: {item.brand} • Tam: {item.size}</p>
+                          
+                          {/* Alert Octagons implementation */}
+                          {getOctagons(item).length > 0 && (
+                            <div className="flex gap-1.5 pt-1">
+                              {getOctagons(item).map((alert, oIdx) => (
+                                <span
+                                  key={oIdx}
+                                  className="bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wide border border-black"
+                                >
+                                  🛑 {alert}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs bg-gray-100 text-gray-600 font-extrabold px-2.5 py-1 rounded-md">
+                            x{item.quantity}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Suggested Stores Module */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                  <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Elegí el local más conveniente</h4>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    {generatedList.suggested_stores.map((store, sIdx) => (
+                      <button
+                        key={sIdx}
+                        onClick={() => setActiveStoreIndex(sIdx)}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
+                          activeStoreIndex === sIdx
+                            ? "border-red-500 bg-red-50/30 shadow-sm"
+                            : "border-gray-100 hover:border-gray-200 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span className="text-sm font-bold text-gray-800">{store.store_name}</span>
+                          {store.badge && (
+                            <span className="bg-red-100 text-red-700 font-extrabold text-[8px] px-1.5 py-0.5 rounded-full uppercase">
+                              {store.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2.5">
+                          <p className="text-xs text-gray-400">Entrega: {store.eta}</p>
+                          <p className="text-sm font-extrabold text-gray-900 mt-0.5">
+                            ${store.total_price.toLocaleString("es-AR")}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleProceedToCheckout}
+                    className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-red-100 flex items-center justify-center space-x-2"
+                  >
+                    <span>Continuar al checkout</span>
+                    <span className="text-sm">👉</span>
+                  </button>
+                </div>
+
+              </div>
+            )}
+
+            {/* Empty landing view */}
+            {!generatedList && !isLoading && (
+              <div className="text-center py-16 text-gray-400 space-y-4">
+                <span className="text-6xl animate-pulse inline-block">🤖</span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-600">La IA está lista para construir tu lista.</p>
+                  <p className="text-xs text-gray-400 mt-1 max-w-xs mx-auto">
+                    Pedí un asado, un desayuno o ingredientes para tus comidas semanales y mirá las alertas nutricionales al instante.
+                  </p>
+                </div>
+              </div>
+            )}
+
           </div>
         )}
 
+        {/* TAB 2: LISTS */}
         {activeTab === "lists" && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-gray-800">Mis listas guardadas</h2>
-            {/* Empty state */}
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100">
-              <span className="text-4xl text-gray-300">📋</span>
-              <p className="text-sm font-semibold text-gray-700 mt-3">No tenés listas guardadas aún</p>
-              <p className="text-xs text-gray-400 mt-1">Las listas que generes y confirmes aparecerán acá.</p>
-            </div>
+            
+            {savedLists.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100 space-y-3">
+                <span className="text-5xl text-gray-200 block">📋</span>
+                <p className="text-sm font-bold text-gray-700">No tenés listas guardadas aún</p>
+                <p className="text-xs text-gray-400 max-w-xs mx-auto">
+                  Las listas que generes mediante nuestro asistente de IA y confirmes tu pedido se guardarán aquí de forma automática.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {savedLists.map((list, idx) => (
+                  <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-sm font-extrabold text-gray-800">{list.title}</h3>
+                        <p className="text-xs text-gray-400">{list.description}</p>
+                      </div>
+                      <span className="bg-gray-100 text-gray-500 font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase">
+                        {list.vendorAssociated}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 pl-2 border-l-2 border-red-500">
+                      {list.items.map((item: any, iIdx: number) => (
+                        <p key={iIdx} className="text-xs text-gray-600 font-medium">
+                          • {item.description} <span className="font-extrabold text-gray-400">(x{item.quantity})</span>
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
+        {/* TAB 3: CHECKOUT */}
         {activeTab === "checkout" && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-800">Elegí el local más conveniente</h2>
-            <div className="bg-white rounded-xl shadow-sm p-4 border border-gray-100 text-center text-gray-500">
-              <p className="text-sm">Primero debés generar una lista en la sección de IA.</p>
-            </div>
+            <h2 className="text-lg font-bold text-gray-800">Finalizá tu compra</h2>
+
+            {!generatedList ? (
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100 space-y-3">
+                <span className="text-5xl text-gray-200 block">🛒</span>
+                <p className="text-sm font-bold text-gray-700">Tu carrito de checkout está vacío</p>
+                <p className="text-xs text-gray-400 max-w-xs mx-auto">
+                  Por favor, ve a la sección "IA Assistant" para armar una propuesta de lista inteligente primero.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                
+                {/* Store selection header */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Local seleccionado</h3>
+                    <p className="text-sm font-bold text-gray-800 mt-0.5">
+                      {generatedList.suggested_stores[activeStoreIndex]?.store_name}
+                    </p>
+                  </div>
+                  <span className="bg-green-100 text-green-700 text-xs font-extrabold px-2.5 py-1 rounded-full">
+                    {generatedList.suggested_stores[activeStoreIndex]?.eta}
+                  </span>
+                </div>
+
+                {/* Shipping address & priority options */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3.5">
+                  <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Datos de envío</h4>
+                  
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Dirección de entrega</label>
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className="w-full text-sm font-semibold border-b border-gray-200 py-1 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase">Instrucciones de entrega</label>
+                    <input
+                      type="text"
+                      value={instructions}
+                      onChange={(e) => setInstructions(e.target.value)}
+                      className="w-full text-sm font-semibold border-b border-gray-200 py-1 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+
+                  {/* Priority shipping check toggle */}
+                  <div className="flex items-center justify-between bg-red-50/20 p-2.5 rounded-lg border border-red-100/50">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-lg">⚡</span>
+                      <div>
+                        <p className="text-xs font-bold text-red-600">Envío prioritario</p>
+                        <p className="text-[10px] text-gray-400">Llega 10 min antes directamente a tu casa</p>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={priorityShipping}
+                      onChange={(e) => setPriorityShipping(e.target.checked)}
+                      className="w-4.5 h-4.5 accent-red-600 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Tips options button group */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Propina para el rider</h4>
+                    <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+                      El 100% va al rider
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[0, 700, 1000, 1500, 2000].map((tipVal) => (
+                      <button
+                        key={tipVal}
+                        onClick={() => setRiderTip(tipVal)}
+                        className={`text-xs font-extrabold py-2.5 rounded-lg border transition-all ${
+                          riderTip === tipVal
+                            ? "border-red-500 bg-red-600 text-white"
+                            : "border-gray-100 bg-gray-50 hover:bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {tipVal === 0 ? "Ahora no" : `$${tipVal}`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Purchase summary */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-2.5">
+                  <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Resumen de costos</h4>
+                  
+                  <div className="space-y-1.5 text-xs text-gray-500 font-semibold">
+                    <div className="flex justify-between">
+                      <span>Subtotal Productos</span>
+                      <span className="text-gray-800">${basePrice.toLocaleString("es-AR")}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Costo de envío estándar</span>
+                      <span className="text-gray-800">${deliveryFee.toLocaleString("es-AR")}</span>
+                    </div>
+                    {priorityShipping && (
+                      <div className="flex justify-between text-red-600 font-bold">
+                        <span>Envío prioritario</span>
+                        <span>+ $750</span>
+                      </div>
+                    )}
+                    {riderTip > 0 && (
+                      <div className="flex justify-between text-gray-600 font-bold">
+                        <span>Propina para el repartidor</span>
+                        <span>+ ${riderTip.toLocaleString("es-AR")}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-gray-100 pt-2.5 flex justify-between text-sm font-extrabold text-gray-900">
+                      <span>Total final</span>
+                      <span>${totalPrice.toLocaleString("es-AR")}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handlePlaceOrder}
+                    className="w-full mt-3 bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-4 rounded-xl transition-all shadow-md shadow-red-100 text-center"
+                  >
+                    Confirmar y realizar pedido 🛒
+                  </button>
+                </div>
+
+              </div>
+            )}
           </div>
         )}
+
       </section>
 
-      {/* 3. Bottom Mobile Tabs Navigation */}
+      {/* Tabs Navigation */}
       <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-10">
         <button
           onClick={() => setActiveTab("build")}

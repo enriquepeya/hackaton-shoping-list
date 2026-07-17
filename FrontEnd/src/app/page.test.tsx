@@ -32,7 +32,7 @@ describe("Home PWA Layout", () => {
     fireEvent.click(checkoutTabButton);
     
     // Should render checkout empty state
-    expect(screen.getByText("Elegí el local más conveniente")).toBeInTheDocument();
+    expect(screen.getByText("Tu carrito de checkout está vacío")).toBeInTheDocument();
     expect(screen.queryByText("Mis listas guardadas")).not.toBeInTheDocument();
   });
 });
