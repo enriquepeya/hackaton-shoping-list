@@ -1,0 +1,24 @@
+conductor/tracks/frontend_ai_integration_20260716/plan.md
+  s_d5bf36b4244bde::t_b1940a44f12e5f 16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c9ac3cd3739f44e9de710c528d659c4bd4f841d6",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_d5bf36b4244bde": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "f76899b8-d97c-42b6-956b-5bdd509e5912",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
