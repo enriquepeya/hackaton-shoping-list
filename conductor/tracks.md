@@ -17,3 +17,9 @@ This file tracks all major tracks for the project. Each track has its own detail
 - [x] **Track: Implement Next.js PWA Frontend and AI Shopping Assistant BFF Integration**
   *Link: [./tracks/frontend_ai_integration_20260716/](./tracks/frontend_ai_integration_20260716/)*
 
+---
+
+- [ ] **Track: Multimodal AI Integration (Camera, Upload & Audio)**
+  *Link: [./tracks/multimodal_ai_integration_20260717/](./tracks/multimodal_ai_integration_20260717/)*
+
+
