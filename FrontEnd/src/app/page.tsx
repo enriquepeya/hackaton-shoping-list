@@ -585,7 +585,7 @@ export default function Home() {
                 setShowLauncher(prev => !prev);
                 setShowCameraOptions(false); // Reset camera options state
               }}
-              className="fixed bottom-20 right-4 z-40 bg-[#e21247] hover:bg-[#b91c1c] active:scale-95 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-red-500/30 transition-all border border-red-400/20"
+              className="absolute bottom-20 right-4 z-40 bg-[#e21247] hover:bg-[#b91c1c] active:scale-95 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-red-500/30 transition-all border border-red-400/20"
               title="Abrir buscador cognitivo"
             >
               <span className="text-2xl filter drop-shadow-sm">📋</span>
