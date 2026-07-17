@@ -30,8 +30,8 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
     - [ ] Create checkout form with priority delivery check toggle, rider tips button group, and final totals module
 
 ## Phase 4: Full Integration with Go Hexagonal API Backend
-- [ ] Task: Connect Frontend State to Go API Backend
+- [x] Task: Connect Frontend State to Go API Backend (5987700)
     - [ ] Configure HttpClient (e.g. axios/fetch) targeting Go Backend on `http://localhost:8080` (configured with CORS)
     - [ ] On list confirmation, trigger `POST /api/v1/lists` creating the list and `POST /api/v1/lists/{id}/items` iterating to save items
     - [ ] Implement `PATCH /api/v1/lists/{id}/items/{itemId}/toggle` on checking items, with optimistic updates in UI
-- [ ] Task: Conductor - User Manual Verification 'End-to-end Interactive Demo' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'End-to-end Interactive Demo' (Protocol in workflow.md) (5987700)
