@@ -24,7 +24,7 @@ describe("Home PWA Layout", () => {
     fireEvent.click(listsTabButton);
     
     // Should render lists view
-    expect(screen.getByText("Mis listas guardadas")).toBeInTheDocument();
+    expect(screen.getByText("Mis listas")).toBeInTheDocument();
     expect(screen.queryByText("¿Qué necesitás hoy?")).not.toBeInTheDocument();
     
     // Click 'Checkout' tab
@@ -33,6 +33,6 @@ describe("Home PWA Layout", () => {
     
     // Should render checkout empty state
     expect(screen.getByText("Tu carrito de checkout está vacío")).toBeInTheDocument();
-    expect(screen.queryByText("Mis listas guardadas")).not.toBeInTheDocument();
+    expect(screen.queryByText("Mis listas")).not.toBeInTheDocument();
   });
 });

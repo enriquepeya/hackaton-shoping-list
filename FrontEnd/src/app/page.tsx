@@ -282,22 +282,22 @@ export default function Home() {
   return (
     <main className="max-w-md w-full min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col justify-between">
       {/* Header */}
-      <header className="bg-red-600 text-white p-4 flex items-center justify-between shadow-md">
+      <header className="bg-white border-b border-gray-100 p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center space-x-2">
-          <span className="text-xl font-bold tracking-tight">List-Builder</span>
-          <span className="bg-white text-red-600 text-xs font-extrabold px-1.5 py-0.5 rounded-full uppercase">PWA</span>
+          <span className="text-xl font-bold tracking-tight text-gray-800">List-Builder</span>
+          <span className="bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">PWA</span>
         </div>
         <div className="flex space-x-2">
-          <span className="text-xs bg-red-700 px-2 py-1 rounded-full text-red-100 font-medium">Demo Mode</span>
+          <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-bold">Demo Mode</span>
         </div>
       </header>
 
       {/* Main viewport */}
-      <section className="flex-1 overflow-y-auto p-4 bg-gray-50 pb-20">
+      <section className="flex-1 overflow-y-auto bg-white pb-20">
         
-        {/* TAB 1: BUILD (AI PROMPT) */}
+        {/* TAB 1: BUILD (AI Assistant) */}
         {activeTab === "build" && (
-          <div className="space-y-4">
+          <div className="p-4 space-y-4">
             
             {/* Input prompt module */}
             <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
@@ -469,50 +469,238 @@ export default function Home() {
           </div>
         )}
 
-        {/* TAB 2: LISTS */}
+        {/* TAB 2: LISTS (HIGH FIDELITY DESIGN FROM SCREENSHOT) */}
         {activeTab === "lists" && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-800">Mis listas guardadas</h2>
+          <div className="space-y-6 pt-4">
             
-            {savedLists.length === 0 ? (
-              <div className="bg-white rounded-xl shadow-sm p-8 text-center border border-gray-100 space-y-3">
-                <span className="text-5xl text-gray-200 block">📋</span>
-                <p className="text-sm font-bold text-gray-700">No tenés listas guardadas aún</p>
-                <p className="text-xs text-gray-400 max-w-xs mx-auto">
-                  Las listas que generes mediante nuestro asistente de IA y confirmes tu pedido se guardarán aquí de forma automática.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {savedLists.map((list, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-sm font-extrabold text-gray-800">{list.title}</h3>
-                        <p className="text-xs text-gray-400">{list.description}</p>
-                      </div>
-                      <span className="bg-gray-100 text-gray-500 font-extrabold text-[10px] px-2 py-0.5 rounded-full uppercase">
-                        {list.vendorAssociated}
-                      </span>
+            {/* Centered header label exactly as design */}
+            <div className="text-center border-b border-gray-100 pb-3">
+              <h1 className="text-lg font-black text-gray-900 tracking-tight">Listas</h1>
+            </div>
+
+            {/* Section 1: Mis listas */}
+            <div className="space-y-3 px-4">
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Mis listas</h2>
+              
+              <div className="flex overflow-x-auto gap-4 pb-3 scrollbar-none">
+                
+                {/* 1. Crear nueva card */}
+                <div 
+                  onClick={() => setActiveTab("build")}
+                  className="flex-shrink-0 w-32 cursor-pointer group"
+                >
+                  <div className="w-32 h-32 bg-gray-50 hover:bg-gray-100 rounded-2xl flex items-center justify-center border border-gray-100/50 transition-all">
+                    <span className="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-2xl font-bold shadow-md shadow-red-200">
+                      +
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-gray-800 mt-2 text-left">Crear nueva</p>
+                </div>
+
+                {/* 2. Hardcoded Desayuno list with user avatars */}
+                <div className="flex-shrink-0 w-32">
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2 relative flex flex-col justify-between">
+                    {/* Collaborative Avatars stacking at the top left */}
+                    <div className="absolute -top-1.5 -left-1 flex -space-x-1.5 z-10 scale-90">
+                      <span className="w-5 h-5 rounded-full border border-white bg-blue-500 text-[8px] text-white flex items-center justify-center font-bold">👩</span>
+                      <span className="w-5 h-5 rounded-full border border-white bg-red-500 text-[8px] text-white flex items-center justify-center font-bold">👨</span>
+                      <span className="w-5 h-5 rounded-full border border-white bg-green-500 text-[8px] text-white flex items-center justify-center font-bold">👦</span>
                     </div>
 
-                    <div className="space-y-1 pl-2 border-l-2 border-red-500">
-                      {list.items.map((item: any, iIdx: number) => (
-                        <p key={iIdx} className="text-xs text-gray-600 font-medium">
-                          • {item.description} <span className="font-extrabold text-gray-400">(x{item.quantity})</span>
-                        </p>
-                      ))}
+                    {/* 2x2 Image cells wrapper */}
+                    <div className="grid grid-cols-2 gap-1.5 h-full">
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">💧</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍌</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍪</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🧼</div>
                     </div>
                   </div>
+                  <p className="text-xs font-bold text-gray-800 mt-2 text-left">Desayuno</p>
+                  <p className="text-[10px] text-gray-400 font-medium text-left">20 productos</p>
+                </div>
+
+                {/* 3. Hardcoded Café Martínez Desayuno list */}
+                <div className="flex-shrink-0 w-32">
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2 relative">
+                    <div className="grid grid-cols-2 gap-1.5 h-full">
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">☕</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🥐</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍰</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍫</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="border border-gray-200 text-gray-700 text-[7px] font-black px-1 py-0.5 rounded uppercase leading-none bg-white">
+                      MARTÍNEZ
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 leading-none">Desayuno</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">3 productos</p>
+                </div>
+
+                {/* Dynamically created lists from the Go hexagonal backend! */}
+                {savedLists.map((list) => (
+                  <div key={list.id} className="flex-shrink-0 w-32 animate-fadeIn">
+                    <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-red-100 p-2 flex flex-col justify-between">
+                      <div className="grid grid-cols-2 gap-1.5 h-full">
+                        {list.items.slice(0, 4).map((it, iIdx) => (
+                          <div key={iIdx} className="bg-white rounded-lg flex items-center justify-center text-xs border border-gray-100 font-bold text-red-500">
+                            {it.description.toLowerCase().includes("asado") || it.description.toLowerCase().includes("vacio") || it.description.toLowerCase().includes("chorizo") ? "🥩" : "🛒"}
+                          </div>
+                        ))}
+                        {list.items.length < 4 && Array.from({ length: 4 - list.items.length }).map((_, rIdx) => (
+                          <div key={rIdx} className="bg-white rounded-lg border border-gray-100/50 flex items-center justify-center text-gray-200">
+                            •
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1.5 mt-2">
+                      <span className="bg-red-50 text-red-600 text-[7px] font-black px-1 py-0.5 rounded uppercase leading-none border border-red-100">
+                        {list.vendorAssociated.substring(0, 8).toUpperCase()}
+                      </span>
+                      <span className="text-xs font-bold text-gray-800 leading-none truncate">{list.title}</span>
+                    </div>
+                    <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">
+                      {list.items.reduce((sum, item) => sum + item.quantity, 0)} productos
+                    </p>
+                  </div>
                 ))}
+
               </div>
-            )}
+            </div>
+
+            {/* Section 2: Sugerencias */}
+            <div className="space-y-3 px-4">
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Sugerencias</h2>
+              
+              <div className="flex overflow-x-auto gap-4 pb-3 scrollbar-none">
+                
+                {/* Sugerencias Card 1 */}
+                <div className="flex-shrink-0 w-32 cursor-pointer" onClick={() => {
+                  setPromptInput("Compra para toda la semana");
+                  handleGenerateList("Compra para toda la semana");
+                  setActiveTab("build");
+                }}>
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2">
+                    <div className="grid grid-cols-2 gap-1.5 h-full">
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">💧</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍌</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍪</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🧼</div>
+                    </div>
+                  </div>
+                  <p className="text-xs font-bold text-gray-800 mt-2 text-left">Para toda la semana</p>
+                  <p className="text-[10px] text-gray-400 font-medium text-left">20 productos</p>
+                </div>
+
+                {/* Sugerencias Card 2 */}
+                <div className="flex-shrink-0 w-32 cursor-pointer" onClick={() => {
+                  setPromptInput("Desayuno Martínez");
+                  handleGenerateList("Desayuno Martínez");
+                  setActiveTab("build");
+                }}>
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2">
+                    <div className="grid grid-cols-2 gap-1.5 h-full">
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">☕</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🥐</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍰</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍫</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="border border-gray-200 text-gray-700 text-[7px] font-black px-1 py-0.5 rounded uppercase leading-none bg-white">
+                      MARTÍNEZ
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 leading-none">Desayuno</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">3 productos</p>
+                </div>
+
+                {/* Sugerencias Card 3 (Wrap de Pollo Almacen de Pizzas) */}
+                <div className="flex-shrink-0 w-32 cursor-pointer" onClick={() => {
+                  setPromptInput("Wrap de Pollo Almacen");
+                  handleGenerateList("Wrap de Pollo Almacen");
+                  setActiveTab("build");
+                }}>
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2 flex items-center justify-center overflow-hidden">
+                    {/* Big beautiful Wrap Emoji & styled design */}
+                    <span className="text-6xl filter drop-shadow-sm">🌯</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="bg-black text-white text-[7px] font-black px-1 py-0.5 rounded uppercase leading-none">
+                      ALMACÉN
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 leading-none">Wrap de Pollo</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">1 productos</p>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Section 3: Patrocinadas */}
+            <div className="space-y-3 px-4 pb-4">
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">Patrocinadas</h2>
+              
+              <div className="flex overflow-x-auto gap-4 pb-3 scrollbar-none">
+                
+                {/* Patrocinadas Card 1 */}
+                <div className="flex-shrink-0 w-32">
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2">
+                    <div className="grid grid-cols-2 gap-1.5 h-full">
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">💧</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍌</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍪</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🧼</div>
+                    </div>
+                  </div>
+                  <p className="text-xs font-bold text-gray-800 mt-2 text-left">Para toda la semana</p>
+                  <p className="text-[10px] text-gray-400 font-medium text-left">20 productos</p>
+                </div>
+
+                {/* Patrocinadas Card 2 */}
+                <div className="flex-shrink-0 w-32">
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2">
+                    <div className="grid grid-cols-2 gap-1.5 h-full">
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">☕</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🥐</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍰</div>
+                      <div className="bg-white rounded-lg flex items-center justify-center text-base border border-gray-100">🍫</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="border border-gray-200 text-gray-700 text-[7px] font-black px-1 py-0.5 rounded uppercase leading-none bg-white">
+                      MARTÍNEZ
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 leading-none">Desayuno</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">3 productos</p>
+                </div>
+
+                {/* Patrocinadas Card 3 */}
+                <div className="flex-shrink-0 w-32">
+                  <div className="w-32 h-32 bg-gray-50 rounded-2xl border border-gray-100/50 p-2 flex items-center justify-center overflow-hidden">
+                    <span className="text-6xl filter drop-shadow-sm">🌯</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5 mt-2">
+                    <span className="bg-black text-white text-[7px] font-black px-1 py-0.5 rounded uppercase leading-none">
+                      ALMACÉN
+                    </span>
+                    <span className="text-xs font-bold text-gray-800 leading-none">Wrap de Pollo</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 font-medium text-left mt-0.5">1 productos</p>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         )}
 
         {/* TAB 3: CHECKOUT */}
         {activeTab === "checkout" && (
-          <div className="space-y-4">
+          <div className="p-4 space-y-4">
             <h2 className="text-lg font-bold text-gray-800">Finalizá tu compra</h2>
 
             {!generatedList ? (
