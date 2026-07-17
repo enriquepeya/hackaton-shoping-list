@@ -25,10 +25,28 @@ interface AIResponse {
   suggested_stores: SuggestedStore[];
 }
 
+interface SavedItem {
+  sku: string;
+  description: string;
+  quantity: number;
+  addedByUserId: string;
+}
+
+interface SavedList {
+  id: string;
+  title: string;
+  description: string;
+  vendorAssociated: string;
+  items: SavedItem[];
+}
+
+const BACKEND_URL = "http://localhost:8080";
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("build");
   const [promptInput, setPromptInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaved] = useState(false);
   
   // Active generated list state
   const [generatedList, setGeneratedList] = useState<AIResponse | null>(null);
@@ -44,8 +62,39 @@ export default function Home() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [successCountdown, setSuccessCountdown] = useState(8);
 
-  // Saved lists memory (will hook up to Go backend in Phase 4)
-  const [savedLists, setSavedLists] = useState<any[]>([]);
+  // Saved lists from Go backend (with local mockup fallback)
+  const [savedLists, setSavedLists] = useState<SavedList[]>([]);
+
+  // Fetch saved lists from Go Hexagonal Backend
+  const fetchSavedLists = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v1/lists/user-123`);
+      if (response.ok) {
+        const data = await response.json();
+        // Map backend schema (camelCase / properties) to frontend state
+        const lists = (data || []).map((l: any) => ({
+          id: l.id,
+          title: l.title,
+          description: l.description || "Lista de compras",
+          vendorAssociated: l.vendorAssociated || "Supermercado",
+          items: (l.items || []).map((it: any) => ({
+            sku: it.sku,
+            description: it.description,
+            quantity: it.quantity,
+            addedByUserId: it.addedByUserId
+          }))
+        }));
+        setSavedLists(lists);
+      }
+    } catch (err) {
+      console.warn("Go Backend not reachable. Using local simulated memory for lists.", err);
+    }
+  };
+
+  // Run fetch on mount and on 'lists' tab activation
+  useEffect(() => {
+    fetchSavedLists();
+  }, [activeTab]);
 
   // Automatic redirect timer on Success Screen
   useEffect(() => {
@@ -124,24 +173,68 @@ export default function Home() {
     setActiveTab("checkout");
   };
 
-  // Confirm order (trigger Success screen)
-  const handlePlaceOrder = () => {
-    setIsSuccess(true);
-    // Add current list to simulated local memory (Phase 4 will send this to Go back-end)
-    if (generatedList) {
-      const newList = {
-        id: "list-" + Math.random().toString(36).substr(2, 9),
-        title: generatedList.list_title,
-        description: generatedList.description,
-        vendorAssociated: generatedList.suggested_stores[activeStoreIndex]?.store_name || "PedidosYa Market",
-        items: generatedList.items.map(it => ({
-          sku: "SKU-" + Math.floor(1000 + Math.random() * 9000),
-          description: `${it.name} (${it.brand}) ${it.size}`,
-          quantity: it.quantity
-        }))
-      };
-      setSavedLists(prev => [newList, ...prev]);
+  // Save list to Go hexagonal backend API
+  const saveCurrentListToBackend = async () => {
+    if (!generatedList) return;
+    setIsSaved(true);
+
+    const storeName = generatedList.suggested_stores[activeStoreIndex]?.store_name || "PedidosYa Market";
+    const payload = {
+      title: generatedList.list_title,
+      vendorAssociated: storeName,
+      ownerId: "user-123",
+      listType: "PRIVATE",
+      isSharable: true,
+      image: "https://example.com/images/list.jpg",
+      items: generatedList.items.map(it => ({
+        sku: "SKU-" + Math.floor(1000 + Math.random() * 9000),
+        description: `${it.name} (${it.brand}) ${it.size}`,
+        quantity: it.quantity,
+        addedByUserId: "user-123"
+      }))
+    };
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v1/lists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        await fetchSavedLists();
+      } else {
+        // Fallback simulated local persistency if backend rejected or is configured strictly
+        simulateLocalSave(payload);
+      }
+    } catch (err) {
+      console.warn("Could not save to Go Backend. Saving locally inside client mock memory.", err);
+      simulateLocalSave(payload);
+    } finally {
+      setIsSaved(false);
     }
+  };
+
+  const simulateLocalSave = (payload: any) => {
+    const newList: SavedList = {
+      id: "list-" + Math.random().toString(36).substr(2, 9),
+      title: payload.title,
+      description: generatedList?.description || "Simulated list",
+      vendorAssociated: payload.vendorAssociated,
+      items: payload.items.map((it: any) => ({
+        sku: it.sku,
+        description: it.description,
+        quantity: it.quantity,
+        addedByUserId: it.addedByUserId
+      }))
+    };
+    setSavedLists(prev => [newList, ...prev]);
+  };
+
+  // Confirm order (trigger Success screen & persist to backend)
+  const handlePlaceOrder = async () => {
+    setIsSuccess(true);
+    await saveCurrentListToBackend();
   };
 
   if (isSuccess) {
