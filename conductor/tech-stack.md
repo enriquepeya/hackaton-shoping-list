@@ -15,6 +15,8 @@ This document defines the official technology stack, dependencies, and environme
 *   **Framework:** **Next.js (React.js)**
     *   **Languages:** **TypeScript & JavaScript**
     *   Provides a highly interactive, server-side rendered (SSR) or statically generated client-side interface for real-time list building, sharing, and order preparation.
+    *   **BFF Layer:** Serverless API Route `/api/generate-list` orchestrating LLM prompt interpretation and mock local vendor evaluations.
+    *   **Testing:** Jest and React Testing Library (RTL) for modular frontend component and integration testing.
 
 ## 3. Persistence Layer
 *   **Storage Adapter:** **Concurrency-Safe MemDB**

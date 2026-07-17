@@ -17,6 +17,8 @@ The Shared List-Builder is a robust, concurrent backend prototype designed for c
 ## 3. Core Features & Functional Requirements
 *   **List Lifecycle Management:** Users can create, retrieve, update, and delete shopping lists.
 *   **Item Lifecycle Management:** Users can add items, toggle their inclusion or selection status in the active list (e.g., preparing/selecting for the final order), and delete items.
+*   **AI-Powered Shopping Assistant:** Translates natural language requests (e.g., "Asado Día del amigo") into comprehensive shopping lists with automatically inferred products, brands, and quantities.
+*   **Store Routing & Cost Comparison:** Evaluates generated shopping lists across multiple vendors (Carrefour, Jumbo, PedidosYa Market, Dia) to dynamically compare prices, ETA, and optimal routing badges.
 *   **Flexible Share Settings & Ownership:**
     *   Lists have explicit owners (`OwnerId`) and visibility types (`PRIVATE` or `PUBLIC`).
     *   Lists can be explicitly marked as sharable (`IsSharable`) or non-sharable regardless of their list type.
