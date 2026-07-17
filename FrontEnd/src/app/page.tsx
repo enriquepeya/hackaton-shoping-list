@@ -84,6 +84,7 @@ export default function Home() {
   // Saved lists from Go backend (with local mockup fallback)
   const [savedLists, setSavedLists] = useState<SavedList[]>([]);
   const [newItemInput, setNewItemInput] = useState("");
+  const [showBottomDrawer, setShowBottomDrawer] = useState(false);
 
   const handleSaveGeneratedList = async () => {
     if (!generatedList) return;
@@ -856,97 +857,99 @@ export default function Home() {
         {activeTab === "build" && (
           <div className="p-4 space-y-4">
             
-            {/* Input prompt module */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-              <h2 className="text-lg font-bold text-gray-800 mb-1">¿Qué necesitás hoy?</h2>
-              <p className="text-xs text-gray-500 mb-3">Pedí por lenguaje natural y la IA armará tu lista de compras perfecta.</p>
-              
-              <div className="relative">
-                <textarea
-                  value={promptInput}
-                  onChange={(e) => setPromptInput(e.target.value)}
-                  placeholder="Ej. Quiero hacer comida para toda la semana con desayuno proteico..."
-                  className="w-full h-24 text-sm border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
-                  disabled={isLoading}
-                />
-              </div>
+            {/* Input prompt module (Requirement: Hidden when generatedList is active) */}
+            {!generatedList && (
+              <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 animate-fadeIn">
+                <h2 className="text-lg font-bold text-gray-800 mb-1">¿Qué necesitás hoy?</h2>
+                <p className="text-xs text-gray-500 mb-3">Pedí por lenguaje natural y la IA armará tu lista de compras perfecta.</p>
+                
+                <div className="relative">
+                  <textarea
+                    value={promptInput}
+                    onChange={(e) => setPromptInput(e.target.value)}
+                    placeholder="Ej. Quiero hacer comida para toda la semana con desayuno proteico..."
+                    className="w-full h-24 text-sm border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
+                    disabled={isLoading}
+                  />
+                </div>
 
-              {/* Explicit Multimodal Action Buttons */}
-              <div className="grid grid-cols-3 gap-2 mt-2">
+                {/* Explicit Multimodal Action Buttons */}
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => audioInputRef.current?.click()}
+                    disabled={isLoading}
+                    className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>🎙️ Dictar Voz</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    disabled={isLoading}
+                    className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>📸 Tomar Foto</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => uploadInputRef.current?.click()}
+                    disabled={isLoading}
+                    className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <span>📁 Subir Foto</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-3">
+                  <button
+                    onClick={() => handleChipClick("Asado", "Quiero hacer un asado para mis amigos")}
+                    className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
+                    disabled={isLoading}
+                  >
+                    🔥 Asado Día del amigo
+                  </button>
+                  <button
+                    onClick={() => handleChipClick("Desayuno", "Quiero desayuno proteico para toda la semana")}
+                    className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
+                    disabled={isLoading}
+                  >
+                    🍳 Desayuno proteico
+                  </button>
+                  <button
+                    onClick={() => handleChipClick("Cena", "Cena saludable rápida wraps de pollo")}
+                    className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
+                    disabled={isLoading}
+                  >
+                    🥗 Cena rápida wraps
+                  </button>
+                </div>
+
                 <button
-                  type="button"
-                  onClick={() => audioInputRef.current?.click()}
-                  disabled={isLoading}
-                  className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                  onClick={() => handleGenerateList("")}
+                  disabled={isLoading || !promptInput.trim()}
+                  className={`w-full mt-4 font-bold py-3 px-4 rounded-xl transition-all shadow-md ${
+                    isLoading || !promptInput.trim()
+                      ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                      : "bg-red-600 hover:bg-red-700 text-white shadow-red-100"
+                  }`}
                 >
-                  <span>🎙️ Dictar Voz</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => cameraInputRef.current?.click()}
-                  disabled={isLoading}
-                  className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>📸 Tomar Foto</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => uploadInputRef.current?.click()}
-                  disabled={isLoading}
-                  className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
-                >
-                  <span>📁 Subir Foto</span>
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+                      {loadingType === "image" 
+                        ? "🤖 Analizando foto de lista..." 
+                        : loadingType === "audio"
+                          ? "🎙️ Interpretando nota de voz..."
+                          : "🤖 Generando Lista Inteligente..."
+                      }
+                    </span>
+                  ) : (
+                    "🤖 Generar Lista Inteligente"
+                  )}
                 </button>
               </div>
-
-              <div className="flex flex-wrap gap-2 mt-3">
-                <button
-                  onClick={() => handleChipClick("Asado", "Quiero hacer un asado para mis amigos")}
-                  className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
-                  disabled={isLoading}
-                >
-                  🔥 Asado Día del amigo
-                </button>
-                <button
-                  onClick={() => handleChipClick("Desayuno", "Quiero desayuno proteico para toda la semana")}
-                  className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
-                  disabled={isLoading}
-                >
-                  🍳 Desayuno proteico
-                </button>
-                <button
-                  onClick={() => handleChipClick("Cena", "Cena saludable rápida wraps de pollo")}
-                  className="text-xs bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 font-semibold px-3 py-1.5 rounded-full transition-all"
-                  disabled={isLoading}
-                >
-                  🥗 Cena rápida wraps
-                </button>
-              </div>
-
-              <button
-                onClick={() => handleGenerateList("")}
-                disabled={isLoading || !promptInput.trim()}
-                className={`w-full mt-4 font-bold py-3 px-4 rounded-xl transition-all shadow-md ${
-                  isLoading || !promptInput.trim()
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
-                    : "bg-red-600 hover:bg-red-700 text-white shadow-red-100"
-                }`}
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                    {loadingType === "image" 
-                      ? "🤖 Analizando foto de lista..." 
-                      : loadingType === "audio"
-                        ? "🎙️ Interpretando nota de voz..."
-                        : "🤖 Generando Lista Inteligente..."
-                    }
-                  </span>
-                ) : (
-                  "🤖 Generar Lista Inteligente"
-                )}
-              </button>
-            </div>
+            )}
 
             {/* Generated results visualization (Requirements 1 & 2 - ejemplo-lista.png) */}
             {generatedList && (
@@ -1105,92 +1108,111 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Sliding input drawer / Add Item Suggestion Drawer (Requirement 1) */}
-                <div className="bg-white border-t border-gray-100 rounded-t-[2rem] p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.03)] space-y-4 absolute bottom-0 left-0 right-0">
-                  {/* Slider handle bar */}
-                  <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-1.5 mb-2"></div>
-                  
-                  {/* Text input with camera and mic trigger buttons */}
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (newItemInput.trim()) {
-                        handleAddNewItemToGeneratedList(newItemInput);
-                        setNewItemInput("");
-                      }
-                    }}
-                    className="flex items-center gap-2 pointer-events-auto"
-                  >
-                    <div className="flex-1 bg-gray-100 hover:bg-gray-200/50 rounded-2xl px-4 py-2.5 border border-gray-200/50 flex items-center transition-all focus-within:ring-2 focus-within:ring-red-500/30">
-                      <input
-                        type="text"
-                        value={newItemInput}
-                        onChange={(e) => setNewItemInput(e.target.value)}
-                        placeholder="Qué necesitas"
-                        className="w-full bg-transparent text-sm font-bold text-gray-800 focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => audioInputRef.current?.click()}
-                        className="text-gray-400 hover:text-gray-600 p-1 focus:outline-none text-base"
-                        title="Dictar voz"
-                      >
-                        🎙️
-                      </button>
-                    </div>
-
+                {/* Collapsed Drawer Trigger Button (Requirement: Hidden/Show Drawer On-Demand) */}
+                {!showBottomDrawer && (
+                  <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-none">
                     <button
-                      type="button"
-                      onClick={() => setShowCameraOptions(prev => !prev)}
-                      className="w-12 h-12 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-2xl flex items-center justify-center border border-gray-200/50 cursor-pointer text-xl"
-                      title="Cámara"
+                      onClick={() => setShowBottomDrawer(true)}
+                      className="pointer-events-auto bg-black hover:bg-gray-800 active:scale-95 text-white font-extrabold text-[10px] py-3 px-6 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider transition-all border border-gray-700/10"
                     >
-                      📷
+                      <span>➕ Agregar / Ver Sugerencias</span>
                     </button>
-                  </form>
-
-                  {/* Suggestions with + button list */}
-                  <div className="space-y-2.5 pt-1 pointer-events-auto">
-                    <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-                          🧀
-                        </div>
-                        <div className="ml-2.5">
-                          <p className="text-xs font-extrabold text-gray-800 text-left">Queso feta</p>
-                          <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">500 gr.</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddNewItemToGeneratedList("Queso feta", "500 gr.")}
-                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-                          🥣
-                        </div>
-                        <div className="ml-2.5">
-                          <p className="text-xs font-extrabold text-gray-800 text-left">Granola con almendras</p>
-                          <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">200 gr.</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleAddNewItemToGeneratedList("Granola con almendras", "200 gr.")}
-                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
-                      >
-                        +
-                      </button>
-                    </div>
                   </div>
+                )}
 
-                </div>
+                {/* Sliding input drawer / Add Item Suggestion Drawer (Requirement 1 - Show/Hide On-Demand) */}
+                {showBottomDrawer && (
+                  <div className="bg-white border-t border-gray-100 rounded-t-[2rem] p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] space-y-4 absolute bottom-0 left-0 right-0 z-30 animate-slideUp">
+                    {/* Slider handle bar to collapse */}
+                    <button 
+                      type="button"
+                      onClick={() => setShowBottomDrawer(false)}
+                      className="w-12 h-1 bg-gray-200 hover:bg-gray-300 rounded-full mx-auto -mt-1.5 mb-2 block focus:outline-none cursor-pointer"
+                      title="Ocultar"
+                    ></button>
+                    
+                    {/* Text input with camera and mic trigger buttons */}
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (newItemInput.trim()) {
+                          handleAddNewItemToGeneratedList(newItemInput);
+                          setNewItemInput("");
+                        }
+                      }}
+                      className="flex items-center gap-2 pointer-events-auto"
+                    >
+                      <div className="flex-1 bg-gray-100 hover:bg-gray-200/50 rounded-2xl px-4 py-2.5 border border-gray-200/50 flex items-center transition-all focus-within:ring-2 focus-within:ring-red-500/30">
+                        <input
+                          type="text"
+                          value={newItemInput}
+                          onChange={(e) => setNewItemInput(e.target.value)}
+                          placeholder="Qué necesitas"
+                          className="w-full bg-transparent text-sm font-bold text-gray-800 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => audioInputRef.current?.click()}
+                          className="text-gray-400 hover:text-gray-600 p-1 focus:outline-none text-base"
+                          title="Dictar voz"
+                        >
+                          🎙️
+                        </button>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowCameraOptions(prev => !prev)}
+                        className="w-12 h-12 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-2xl flex items-center justify-center border border-gray-200/50 cursor-pointer text-xl"
+                        title="Cámara"
+                      >
+                        📷
+                      </button>
+                    </form>
+
+                    {/* Suggestions with + button list */}
+                    <div className="space-y-2.5 pt-1 pointer-events-auto">
+                      <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                            🧀
+                          </div>
+                          <div className="ml-2.5">
+                            <p className="text-xs font-extrabold text-gray-800 text-left">Queso feta</p>
+                            <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">500 gr.</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddNewItemToGeneratedList("Queso feta", "500 gr.")}
+                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                            🥣
+                        </div>
+                          <div className="ml-2.5">
+                            <p className="text-xs font-extrabold text-gray-800 text-left">Granola con almendras</p>
+                            <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">200 gr.</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddNewItemToGeneratedList("Granola con almendras", "200 gr.")}
+                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
 
               </div>
             )}
