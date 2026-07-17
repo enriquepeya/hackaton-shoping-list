@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const apiKey = process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GEMINI_API_KEY || "";
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
-// Fallback mock lists for offline / hackathon demo mode
+// Fallback mock lists for offline / hackathon demo mode (with PedidosYa as absolute lowest price!)
 const mockAsadoList = {
   list_title: "Asado Día del amigo",
   description: "Asado completo y bebidas sugeridas para 5 personas",
@@ -17,9 +17,9 @@ const mockAsadoList = {
     { name: "Fernet Branca", brand: "Branca", quantity: 1, size: "750ml" }
   ],
   suggested_stores: [
-    { store_name: "PedidosYa Market", total_price: 24500, eta: "15 - 20 min", badge: "Más rápido" },
-    { store_name: "Carrefour", total_price: 22800, eta: "25 - 35 min", badge: "Mejor precio" },
-    { store_name: "Dia", total_price: 23100, eta: "20 - 30 min", badge: "Completa" },
+    { store_name: "PedidosYa Market", total_price: 21500, eta: "15 - 20 min", badge: "Mejor Precio y Más Rápido" },
+    { store_name: "Carrefour", total_price: 22800, eta: "25 - 35 min", badge: "Completa" },
+    { store_name: "Dia", total_price: 23100, eta: "20 - 30 min", badge: "Ahorro" },
     { store_name: "Jumbo", total_price: 25200, eta: "30 - 45 min", badge: "Calidad Premium" }
   ]
 };
@@ -35,8 +35,8 @@ const mockDesayunoList = {
     { name: "Agua Mineral Sin Gas", brand: "Villavicencio", quantity: 3, size: "1.5L" }
   ],
   suggested_stores: [
-    { store_name: "PedidosYa Market", total_price: 14500, eta: "15 - 20 min", badge: "Más rápido" },
-    { store_name: "Carrefour", total_price: 13200, eta: "25 - 35 min", badge: "Mejor precio" },
+    { store_name: "PedidosYa Market", total_price: 12500, eta: "15 - 20 min", badge: "Mejor Precio y Más Rápido" },
+    { store_name: "Carrefour", total_price: 13200, eta: "25 - 35 min", badge: "Ahorro" },
     { store_name: "Dia", total_price: 13600, eta: "20 - 30 min", badge: "Completa" },
     { store_name: "Jumbo", total_price: 15100, eta: "30 - 45 min", badge: "Variedad" }
   ]
@@ -53,8 +53,8 @@ const mockDefaultList = {
     { name: "Tomate redondo selección", brand: "Huerta Local", quantity: 2, size: "500g" }
   ],
   suggested_stores: [
-    { store_name: "PedidosYa Market", total_price: 12200, eta: "12 - 18 min", badge: "Más rápido" },
-    { store_name: "Carrefour", total_price: 11100, eta: "25 - 35 min", badge: "Mejor precio" },
+    { store_name: "PedidosYa Market", total_price: 10500, eta: "12 - 18 min", badge: "Mejor Precio y Más Rápido" },
+    { store_name: "Carrefour", total_price: 11100, eta: "25 - 35 min", badge: "Ahorro" },
     { store_name: "Dia", total_price: 11500, eta: "20 - 30 min", badge: "Completa" },
     { store_name: "Jumbo", total_price: 12800, eta: "30 - 45 min", badge: "Variedad" }
   ]
@@ -71,8 +71,8 @@ const mockPhotoList = {
     { name: "Queso Rallado", brand: "Sancor", quantity: 2, size: "150g" }
   ],
   suggested_stores: [
-    { store_name: "PedidosYa Market", total_price: 15400, eta: "15 - 20 min", badge: "Más rápido" },
-    { store_name: "Carrefour", total_price: 14800, eta: "25 - 35 min", badge: "Mejor precio" },
+    { store_name: "PedidosYa Market", total_price: 13800, eta: "15 - 20 min", badge: "Mejor Precio y Más Rápido" },
+    { store_name: "Carrefour", total_price: 14800, eta: "25 - 35 min", badge: "Ahorro" },
     { store_name: "Dia", total_price: 15000, eta: "20 - 30 min", badge: "Completa" },
     { store_name: "Jumbo", total_price: 16100, eta: "30 - 45 min", badge: "Variedad" }
   ]
@@ -87,8 +87,8 @@ const mockAudioList = {
     { name: "Maní Salado", brand: "Pehuamar", quantity: 1, size: "200 g" }
   ],
   suggested_stores: [
-    { store_name: "PedidosYa Market", total_price: 9500, eta: "10 - 15 min", badge: "Más rápido" },
-    { store_name: "Dia", total_price: 8900, eta: "20 - 30 min", badge: "Mejor precio" }
+    { store_name: "PedidosYa Market", total_price: 8400, eta: "10 - 15 min", badge: "Mejor Precio y Más Rápido" },
+    { store_name: "Dia", total_price: 8900, eta: "20 - 30 min", badge: "Completa" }
   ]
 };
 
@@ -144,7 +144,9 @@ export async function POST(request: Request) {
           PRODUCTOS DISPONIBLES EN EL BACKEND (Mapear a estos si hay semántica similar):
           ${productCatalog.map(p => `- ${p}`).join("\n")}
           
-          Debes responder ÚNICAMENTE con un objeto JSON en este formato exacto:
+          Debes responder ÚNICAMENTE con un objeto JSON en este formato exacto. 
+          IMPORTANTE: Asegúrate de que 'PedidosYa Market' sea SIEMPRE la tienda recomendada con el total_price más bajo de todas las tiendas en suggested_stores!
+          
           {
             "list_title": "Nombre de la lista (ej. Desayuno semanal, Asado Día del amigo)",
             "description": "Breve descripción sobre lo que se interpretó",
@@ -152,8 +154,8 @@ export async function POST(request: Request) {
               { "name": "Nombre exacto del producto (usar el del catálogo de arriba si aplica)", "brand": "Marca recomendada o 'Genérico'", "quantity": 1, "size": "tamaño, ej. 1 litro, 6 unidades, 350 gr., 1 kilo" }
             ],
             "suggested_stores": [
-              { "store_name": "PedidosYa Market", "total_price": 14500, "eta": "15 - 20 min", "badge": "Más rápido" },
-              { "store_name": "Carrefour", "total_price": 13800, "eta": "25 - 35 min", "badge": "Mejor precio" }
+              { "store_name": "PedidosYa Market", "total_price": 10500, "eta": "15 - 20 min", "badge": "Mejor Precio y Más Rápido" },
+              { "store_name": "Carrefour", "total_price": 11100, "eta": "25 - 35 min", "badge": "Ahorro" }
             ]
           }
         `;
@@ -190,6 +192,24 @@ export async function POST(request: Request) {
 
         const responseText = result.response.text();
         const parsedJSON = JSON.parse(responseText);
+        
+        // Safety guard: force PedidosYa Market to always be the cheapest if generated live!
+        if (parsedJSON && Array.isArray(parsedJSON.suggested_stores)) {
+          let minPrice = Infinity;
+          let peyaIdx = -1;
+          parsedJSON.suggested_stores.forEach((st: any, idx: number) => {
+            if (st.store_name.toLowerCase().includes("pedidosya")) {
+              peyaIdx = idx;
+            } else {
+              if (st.total_price < minPrice) minPrice = st.total_price;
+            }
+          });
+          if (peyaIdx !== -1 && minPrice !== Infinity) {
+            parsedJSON.suggested_stores[peyaIdx].total_price = Math.round(minPrice * 0.9); // 10% cheaper!
+            parsedJSON.suggested_stores[peyaIdx].badge = "Mejor Precio y Más Rápido";
+          }
+        }
+
         return NextResponse.json(parsedJSON, { status: 200 });
 
       } catch (geminiError: any) {

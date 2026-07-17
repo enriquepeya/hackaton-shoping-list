@@ -1108,112 +1108,6 @@ export default function Home() {
                   </button>
                 </div>
 
-                {/* Collapsed Drawer Trigger Button (Requirement: Hidden/Show Drawer On-Demand) */}
-                {!showBottomDrawer && (
-                  <div className="absolute bottom-4 left-4 right-4 z-20 flex justify-center pointer-events-none">
-                    <button
-                      onClick={() => setShowBottomDrawer(true)}
-                      className="pointer-events-auto bg-black hover:bg-gray-800 active:scale-95 text-white font-extrabold text-[10px] py-3 px-6 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider transition-all border border-gray-700/10"
-                    >
-                      <span>➕ Agregar / Ver Sugerencias</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Sliding input drawer / Add Item Suggestion Drawer (Requirement 1 - Show/Hide On-Demand) */}
-                {showBottomDrawer && (
-                  <div className="bg-white border-t border-gray-100 rounded-t-[2rem] p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] space-y-4 absolute bottom-0 left-0 right-0 z-30 animate-slideUp">
-                    {/* Slider handle bar to collapse */}
-                    <button 
-                      type="button"
-                      onClick={() => setShowBottomDrawer(false)}
-                      className="w-12 h-1 bg-gray-200 hover:bg-gray-300 rounded-full mx-auto -mt-1.5 mb-2 block focus:outline-none cursor-pointer"
-                      title="Ocultar"
-                    ></button>
-                    
-                    {/* Text input with camera and mic trigger buttons */}
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (newItemInput.trim()) {
-                          handleAddNewItemToGeneratedList(newItemInput);
-                          setNewItemInput("");
-                        }
-                      }}
-                      className="flex items-center gap-2 pointer-events-auto"
-                    >
-                      <div className="flex-1 bg-gray-100 hover:bg-gray-200/50 rounded-2xl px-4 py-2.5 border border-gray-200/50 flex items-center transition-all focus-within:ring-2 focus-within:ring-red-500/30">
-                        <input
-                          type="text"
-                          value={newItemInput}
-                          onChange={(e) => setNewItemInput(e.target.value)}
-                          placeholder="Qué necesitas"
-                          className="w-full bg-transparent text-sm font-bold text-gray-800 focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => audioInputRef.current?.click()}
-                          className="text-gray-400 hover:text-gray-600 p-1 focus:outline-none text-base"
-                          title="Dictar voz"
-                        >
-                          🎙️
-                        </button>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setShowCameraOptions(prev => !prev)}
-                        className="w-12 h-12 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-2xl flex items-center justify-center border border-gray-200/50 cursor-pointer text-xl"
-                        title="Cámara"
-                      >
-                        📷
-                      </button>
-                    </form>
-
-                    {/* Suggestions with + button list */}
-                    <div className="space-y-2.5 pt-1 pointer-events-auto">
-                      <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-                            🧀
-                          </div>
-                          <div className="ml-2.5">
-                            <p className="text-xs font-extrabold text-gray-800 text-left">Queso feta</p>
-                            <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">500 gr.</p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleAddNewItemToGeneratedList("Queso feta", "500 gr.")}
-                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
-                        >
-                          +
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-                            🥣
-                        </div>
-                          <div className="ml-2.5">
-                            <p className="text-xs font-extrabold text-gray-800 text-left">Granola con almendras</p>
-                            <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">200 gr.</p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleAddNewItemToGeneratedList("Granola con almendras", "200 gr.")}
-                          className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-
-                  </div>
-                )}
-
               </div>
             )}
 
@@ -1938,6 +1832,111 @@ export default function Home() {
               📥 Importar a mis listas
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Dynamic Sliding input drawer / Add Item Suggestion Drawer (Requirement 1 - Show/Hide On-Demand) */}
+      {activeTab === "build" && generatedList && !showBottomDrawer && (
+        <div className="absolute bottom-16 left-4 right-4 z-20 flex justify-center pointer-events-none">
+          <button
+            onClick={() => setShowBottomDrawer(true)}
+            className="pointer-events-auto bg-black hover:bg-gray-800 active:scale-95 text-white font-extrabold text-[10px] py-3 px-6 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider transition-all border border-gray-700/10"
+          >
+            <span>➕ Agregar / Ver Sugerencias</span>
+          </button>
+        </div>
+      )}
+
+      {activeTab === "build" && generatedList && showBottomDrawer && (
+        <div className="bg-white border-t border-gray-200 rounded-t-[2rem] p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] space-y-4 absolute bottom-16 left-0 right-0 z-30 animate-slideUp pointer-events-auto">
+          {/* Slider handle bar to collapse */}
+          <button 
+            type="button"
+            onClick={() => setShowBottomDrawer(false)}
+            className="w-12 h-1 bg-gray-200 hover:bg-gray-300 rounded-full mx-auto -mt-1.5 mb-2 block focus:outline-none cursor-pointer"
+            title="Ocultar"
+          ></button>
+          
+          {/* Text input with camera and mic trigger buttons */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (newItemInput.trim()) {
+                handleAddNewItemToGeneratedList(newItemInput);
+                setNewItemInput("");
+              }
+            }}
+            className="flex items-center gap-2 pointer-events-auto"
+          >
+            <div className="flex-1 bg-gray-100 hover:bg-gray-200/50 rounded-2xl px-4 py-2.5 border border-gray-200/50 flex items-center transition-all focus-within:ring-2 focus-within:ring-red-500/30">
+              <input
+                type="text"
+                value={newItemInput}
+                onChange={(e) => setNewItemInput(e.target.value)}
+                placeholder="Qué necesitas"
+                className="w-full bg-transparent text-sm font-bold text-gray-800 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => audioInputRef.current?.click()}
+                className="text-gray-400 hover:text-gray-600 p-1 focus:outline-none text-base"
+                title="Dictar voz"
+              >
+                🎙️
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowCameraOptions(prev => !prev)}
+              className="w-12 h-12 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-2xl flex items-center justify-center border border-gray-200/50 cursor-pointer text-xl"
+              title="Cámara"
+            >
+              📷
+            </button>
+          </form>
+
+          {/* Suggestions with + button list */}
+          <div className="space-y-2.5 pt-1 pointer-events-auto">
+            <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                  🧀
+                </div>
+                <div className="ml-2.5">
+                  <p className="text-xs font-extrabold text-gray-800 text-left">Queso feta</p>
+                  <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">500 gr.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleAddNewItemToGeneratedList("Queso feta", "500 gr.")}
+                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
+              >
+                +
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
+              <div className="flex items-center">
+                <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                  🥣
+                </div>
+                <div className="ml-2.5">
+                  <p className="text-xs font-extrabold text-gray-800 text-left">Granola con almendras</p>
+                  <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">200 gr.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleAddNewItemToGeneratedList("Granola con almendras", "200 gr.")}
+                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
         </div>
       )}
     </main>
