@@ -1,0 +1,26 @@
+FrontEnd/src/app/page.tsx
+  s_5fbb7132b1c592::t_45bc76d49d012a 1354-1377
+  s_5fbb7132b1c592::t_e363064a961042 642-646,649-670,674,685,698
+  s_5fbb7132b1c592::t_f8b3dda2c1625c 726-753
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "960211274c0076e2631e43854224b6f8be48e97b",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_5fbb7132b1c592": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "592ecaca-be21-4c8b-aa9c-a0aab9d29358",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
