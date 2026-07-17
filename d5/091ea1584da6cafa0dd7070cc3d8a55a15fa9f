@@ -1,0 +1,26 @@
+conductor/tracks.md
+  s_5fbb7132b1c592::t_f451e0af371bee 20-25
+conductor/tracks/multimodal_ai_integration_20260717/spec.md
+  s_5fbb7132b1c592::t_8e744c628ee051 1-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d5091ea1584da6cafa0dd7070cc3d8a55a15fa9f",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_5fbb7132b1c592": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "592ecaca-be21-4c8b-aa9c-a0aab9d29358",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
