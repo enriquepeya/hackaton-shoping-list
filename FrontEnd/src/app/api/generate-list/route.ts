@@ -48,7 +48,7 @@ const mockDefaultList = {
   items: [
     { name: "Pechuga de pollo fileteada", brand: "Tres Arroyos", quantity: 1, size: "500g" },
     { name: "Rapiditas Integrales Bimbo", brand: "Bimbo", quantity: 1, size: "10 u" },
-    { name: "Queso Crema Light", brand: "Finlandia", quantity: 1, size: "290g" },
+    { name: "Queso Cream Light", brand: "Finlandia", quantity: 1, size: "290g" },
     { name: "Lechuga Capuchina fresca", brand: "Huerta Local", quantity: 1, size: "1 u" },
     { name: "Tomate redondo selección", brand: "Huerta Local", quantity: 2, size: "500g" }
   ],
@@ -98,6 +98,36 @@ export async function POST(request: Request) {
     const prompt = (body.prompt || "").toLowerCase();
     const type = body.type || "text"; // "text", "image", "audio"
 
+    // Dynamic catalog retrieval from the Go Hexagonal in-memory database!
+    let productCatalog: string[] = [
+      "Leche sin lactosa La Serenisima",
+      "Huevos color",
+      "Yogurt natural",
+      "Naranja de jugo",
+      "Pan de masa madre",
+      "Queso feta",
+      "Granola con almendras"
+    ];
+
+    try {
+      const goResponse = await fetch("http://localhost:8080/api/v1/lists/user_123");
+      if (goResponse.ok) {
+        const goLists = await goResponse.json();
+        if (Array.isArray(goLists)) {
+          // Extract descriptions from all currently loaded lists inside Go memory
+          const extractedDescriptions = goLists
+            .flatMap((list: any) => list.items || [])
+            .map((item: any) => item.description);
+          
+          if (extractedDescriptions.length > 0) {
+            productCatalog = Array.from(new Set([...productCatalog, ...extractedDescriptions]));
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Could not query Go Hexagonal Backend, using static base catalog instead.", err);
+    }
+
     // If Gemini client is initiated and we have a valid key, query Gemini Live!
     if (genAI) {
       try {
@@ -108,12 +138,18 @@ export async function POST(request: Request) {
 
         const systemPrompt = `
           Eres el motor cognitivo de un Asistente de Compras para PedidosYa. Tu objetivo es procesar inputs del usuario y estructurar una lista de compras.
+          
+          DEBES seleccionar o mapear los productos interpretados ÚNICAMENTE o con altísima preferencia hacia los productos presentes en nuestro catálogo del backend.
+          
+          PRODUCTOS DISPONIBLES EN EL BACKEND (Mapear a estos si hay semántica similar):
+          ${productCatalog.map(p => `- ${p}`).join("\n")}
+          
           Debes responder ÚNICAMENTE con un objeto JSON en este formato exacto:
           {
             "list_title": "Nombre de la lista (ej. Desayuno semanal, Asado Día del amigo)",
             "description": "Breve descripción sobre lo que se interpretó",
             "items": [
-              { "name": "Nombre exacto del producto", "brand": "Marca recomendada o 'Genérico'", "quantity": 1, "size": "tamaño, ej. 1 litro, 6 unidades, 350 gr., 1 kilo" }
+              { "name": "Nombre exacto del producto (usar el del catálogo de arriba si aplica)", "brand": "Marca recomendada o 'Genérico'", "quantity": 1, "size": "tamaño, ej. 1 litro, 6 unidades, 350 gr., 1 kilo" }
             ],
             "suggested_stores": [
               { "store_name": "PedidosYa Market", "total_price": 14500, "eta": "15 - 20 min", "badge": "Más rápido" },
