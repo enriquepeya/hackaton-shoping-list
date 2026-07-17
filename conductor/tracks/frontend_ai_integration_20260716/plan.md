@@ -8,7 +8,7 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
 - [x] Task: Set up Next.js app with Tailwind CSS and TypeScript (f63ef67)
     - [ ] Create Next.js app boilerplate under `FrontEnd/` directory
     - [ ] Configure Tailwind CSS and compile verifying standard output
-- [ ] Task: Build Mobile-First Main Layout Container
+- [x] Task: Build Mobile-First Main Layout Container (be6b335)
     - [ ] Scaffold the main application wrapper centered using class names `"max-w-md mx-auto min-h-screen bg-white shadow-xl relative overflow-hidden"`
     - [ ] Add basic routing, custom navigation tabs, and default empty state components
 
