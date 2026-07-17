@@ -1,0 +1,26 @@
+FrontEnd/src/app/api/generate-list/route.test.ts
+  s_5fbb7132b1c592::t_e4bf4a2123228b 50-79
+FrontEnd/src/app/api/generate-list/route.ts
+  s_5fbb7132b1c592::t_05e0e7e44efd39 58-89,94,98-102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7d77cebfa48dbe5019b84a9b35817ce7b4e08c33",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_5fbb7132b1c592": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "592ecaca-be21-4c8b-aa9c-a0aab9d29358",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
