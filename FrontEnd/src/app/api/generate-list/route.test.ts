@@ -47,4 +47,34 @@ describe("AI BFF API Route /api/generate-list", () => {
     const data = await response.json();
     expect(data.list_title).toBe("Cena Saludable Express");
   });
+
+  it("returns mock photo list when type is 'image'", async () => {
+    const mockRequest = new Request("http://localhost:3000/api/generate-list", {
+      method: "POST",
+      body: JSON.stringify({ type: "image", image: "data:image/png;base64,mock" }),
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const response = await POST(mockRequest);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.list_title).toBe("Lista escaneada de tu papel");
+    expect(data.items).toContainEqual(expect.objectContaining({ name: "Harina de Trigo 0000" }));
+  });
+
+  it("returns mock audio list when type is 'audio'", async () => {
+    const mockRequest = new Request("http://localhost:3000/api/generate-list", {
+      method: "POST",
+      body: JSON.stringify({ type: "audio", audio: "data:audio/mp3;base64,mock" }),
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const response = await POST(mockRequest);
+    expect(response.status).toBe(200);
+
+    const data = await response.json();
+    expect(data.list_title).toBe("Lista dictada por voz");
+    expect(data.items).toContainEqual(expect.objectContaining({ name: "Cerveza Rubia" }));
+  });
 });

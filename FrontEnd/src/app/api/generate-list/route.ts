@@ -55,14 +55,51 @@ const mockDefaultList = {
   ]
 };
 
+const mockPhotoList = {
+  list_title: "Lista escaneada de tu papel",
+  description: "Productos interpretados por IA a partir de la imagen de tu lista manuscrita.",
+  items: [
+    { name: "Leche Entera", brand: "La Serenísima", quantity: 2, size: "1L" },
+    { name: "Huevos Blancos", brand: "Granja", quantity: 1, size: "6 u" },
+    { name: "Harina de Trigo 0000", brand: "Pureza", quantity: 1, size: "1 kg" },
+    { name: "Tomate Perita", brand: "Fresco", quantity: 1, size: "1 kg" },
+    { name: "Queso Rallado", brand: "Sancor", quantity: 2, size: "150g" }
+  ],
+  suggested_stores: [
+    { store_name: "PedidosYa Market", total_price: 15400, eta: "15 - 20 min", badge: "Más rápido" },
+    { store_name: "Carrefour", total_price: 14800, eta: "25 - 35 min", badge: "Mejor precio" },
+    { store_name: "Dia", total_price: 15000, eta: "20 - 30 min", badge: "Completa" },
+    { store_name: "Jumbo", total_price: 16100, eta: "30 - 45 min", badge: "Variedad" }
+  ]
+};
+
+const mockAudioList = {
+  list_title: "Lista dictada por voz",
+  description: "Productos interpretados por IA a partir de tu nota de voz.",
+  items: [
+    { name: "Cerveza Rubia", brand: "Quilmes", quantity: 6, size: "473 ml" },
+    { name: "Papas Fritas", brand: "Lays", quantity: 2, size: "150 g" },
+    { name: "Maní Salado", brand: "Pehuamar", quantity: 1, size: "200 g" }
+  ],
+  suggested_stores: [
+    { store_name: "PedidosYa Market", total_price: 9500, eta: "10 - 15 min", badge: "Más rápido" },
+    { store_name: "Dia", total_price: 8900, eta: "20 - 30 min", badge: "Mejor precio" }
+  ]
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const prompt = (body.prompt || "").toLowerCase();
+    const type = body.type || "text"; // "text", "image", "audio"
 
     let listToReturn = mockDefaultList;
 
-    if (prompt.includes("asado") || prompt.includes("amigo") || prompt.includes("picada")) {
+    if (type === "image" || body.image) {
+      listToReturn = mockPhotoList;
+    } else if (type === "audio" || body.audio) {
+      listToReturn = mockAudioList;
+    } else if (prompt.includes("asado") || prompt.includes("amigo") || prompt.includes("picada")) {
       listToReturn = mockAsadoList;
     } else if (prompt.includes("desayuno") || prompt.includes("proteico") || prompt.includes("huevo")) {
       listToReturn = mockDesayunoList;
