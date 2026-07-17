@@ -4,7 +4,7 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
 
 ---
 
-## Phase 1: Next.js Boilerplate & Mobile-First Container Scaffold
+## Phase 1: Next.js Boilerplate & Mobile-First Container Scaffold [checkpoint: 015e436]
 - [x] Task: Set up Next.js app with Tailwind CSS and TypeScript (f63ef67)
     - [ ] Create Next.js app boilerplate under `FrontEnd/` directory
     - [ ] Configure Tailwind CSS and compile verifying standard output
