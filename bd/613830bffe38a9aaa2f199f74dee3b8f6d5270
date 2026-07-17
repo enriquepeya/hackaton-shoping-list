@@ -1,0 +1,30 @@
+FrontEnd/jest.config.js
+  s_d5bf36b4244bde::t_746650b601606b 1-17
+FrontEnd/jest.setup.js
+  s_d5bf36b4244bde::t_bbb17d51bf8a61 1
+FrontEnd/package.json
+  s_d5bf36b4244bde::t_09185d5fca8237 9-10
+FrontEnd/src/app/page.test.tsx
+  s_d5bf36b4244bde::t_9d344ead421bc0 1-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "bd613830bffe38a9aaa2f199f74dee3b8f6d5270",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_d5bf36b4244bde": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "f76899b8-d97c-42b6-956b-5bdd509e5912",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
