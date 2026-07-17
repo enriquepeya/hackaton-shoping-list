@@ -1,0 +1,28 @@
+FrontEnd/src/app/page.tsx
+  s_d5bf36b4244bde::t_a03e53f7657e90 285,287-288,291,296,298,300,472,474,476-555,557-560,562,564-568,570-590,593-638,640-697,703
+FrontEnd/src/app/page.test.tsx
+  s_d5bf36b4244bde::t_eedc08fd3caaaf 27,36
+FrontEnd/jest.setup.js
+  s_d5bf36b4244bde::t_7a5e3fa871a554 2-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f7b73daf97d2977f19e7e26d4134687866e874ff",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_d5bf36b4244bde": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "f76899b8-d97c-42b6-956b-5bdd509e5912",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
