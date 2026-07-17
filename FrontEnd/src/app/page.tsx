@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
-type Tab = "build" | "lists" | "checkout";
+type Tab = "home" | "build" | "lists" | "checkout";
 
 interface AIItem {
   name: string;
@@ -43,10 +43,19 @@ interface SavedList {
 const BACKEND_URL = "http://localhost:8080";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<Tab>("build");
+  const [activeTab, setActiveTab] = useState<Tab>("home");
   const [promptInput, setPromptInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaved] = useState(false);
+
+  // Multimodal state and refs
+  const [showLauncher, setShowLauncher] = useState(false);
+  const [loadingType, setLoadingType] = useState<"text" | "image" | "audio" | null>(null);
+  const [showCameraOptions, setShowCameraOptions] = useState(false);
+
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   
   // Active generated list state
   const [generatedList, setGeneratedList] = useState<AIResponse | null>(null);
@@ -111,19 +120,33 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [isSuccess, successCountdown]);
 
-  // Submit prompt to API
-  const handleGenerateList = async (promptText: string) => {
+  // Submit prompt / image / audio to API
+  const handleGenerateList = async (
+    promptText: string = "",
+    payload?: string,
+    type: "text" | "image" | "audio" = "text"
+  ) => {
     const text = promptText || promptInput;
-    if (!text.trim()) return;
+    if (type === "text" && !text.trim()) return;
 
     setIsLoading(true);
+    setLoadingType(type);
     setGeneratedList(null);
 
     try {
+      const bodyPayload: any = { type };
+      if (type === "text") {
+        bodyPayload.prompt = text;
+      } else if (type === "image") {
+        bodyPayload.image = payload;
+      } else if (type === "audio") {
+        bodyPayload.audio = payload;
+      }
+
       const response = await fetch("/api/generate-list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text })
+        body: JSON.stringify(bodyPayload)
       });
       
       if (response.ok) {
@@ -135,7 +158,33 @@ export default function Home() {
       console.error("Error generating list:", err);
     } finally {
       setIsLoading(false);
+      setLoadingType(null);
     }
+  };
+
+  // Read and convert chosen file to base64
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "image" | "audio"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    setLoadingType(type);
+    setGeneratedList(null);
+    setActiveTab("build"); // Switches to AI Assistant tab to see the generation progress!
+    setShowLauncher(false); // Closes the launcher drawer
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      await handleGenerateList("", base64String, type);
+    };
+    reader.readAsDataURL(file);
+    
+    // Clear input so selecting same file triggers change again
+    e.target.value = "";
   };
 
   // Quick chips helper
@@ -282,19 +331,384 @@ export default function Home() {
   return (
     <main className="max-w-md w-full min-h-screen bg-white shadow-xl relative overflow-hidden flex flex-col justify-between">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 p-4 flex items-center justify-between shadow-sm">
-        <div className="flex items-center space-x-2">
-          <span className="text-xl font-bold tracking-tight text-gray-800">List-Builder</span>
-          <span className="bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">PWA</span>
-        </div>
-        <div className="flex space-x-2">
-          <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-bold">Demo Mode</span>
-        </div>
-      </header>
+      {activeTab !== "home" && (
+        <header className="bg-white border-b border-gray-100 p-4 flex items-center justify-between shadow-sm">
+          <div className="flex items-center space-x-2">
+            <span className="text-xl font-bold tracking-tight text-gray-800">List-Builder</span>
+            <span className="bg-red-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full uppercase">PWA</span>
+          </div>
+          <div className="flex space-x-2">
+            <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-1 rounded-full font-bold">Demo Mode</span>
+          </div>
+        </header>
+      )}
 
       {/* Main viewport */}
       <section className="flex-1 overflow-y-auto bg-white pb-20">
         
+        {/* TAB 0: HOME */}
+        {activeTab === "home" && (
+          <div className="flex flex-col min-h-full pb-24 bg-white select-none">
+            {/* Red top section: Header, Status Bar, Address, Search and Banner */}
+            <div className="bg-[#e21247] pb-8 rounded-b-[2.5rem] px-4 pt-3 text-white relative overflow-hidden shadow-lg shadow-red-100/50">
+              
+              {/* Status Bar */}
+              <div className="flex justify-between items-center text-xs font-semibold tracking-wider opacity-95">
+                <span>9:41</span>
+                <div className="flex items-center space-x-1">
+                  <span>📶</span>
+                  <span>🛜</span>
+                  <span>🔋</span>
+                </div>
+              </div>
+
+              {/* Delivery Address & Utility Icons */}
+              <div className="flex justify-between items-center mt-3.5">
+                <button className="flex items-center space-x-1.5 focus:outline-none active:scale-95 transition-transform">
+                  <span className="text-base font-extrabold tracking-tight">Av. Juan J. Paso 3535</span>
+                  <span className="text-xs">▼</span>
+                </button>
+                <div className="flex items-center space-x-3.5">
+                  <button className="relative focus:outline-none active:scale-90 transition-transform">
+                    <span className="text-xl">🔔</span>
+                    <span className="absolute -top-1 -right-1 bg-white text-[#e21247] text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-[#e21247]">
+                      1
+                    </span>
+                  </button>
+                  <button className="focus:outline-none active:scale-90 transition-transform" onClick={() => setActiveTab("checkout")}>
+                    <span className="text-xl">🛒</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="bg-white rounded-full py-2 px-3 flex items-center justify-between w-full shadow-md mt-4 border border-red-200/20">
+                <span className="text-gray-400 text-xs font-medium pl-2.5">Locales, platos y productos</span>
+                <button className="bg-[#e21247] text-white p-1.5 rounded-full w-8 h-8 flex items-center justify-center focus:outline-none active:scale-95 transition-all">
+                  <span className="text-xs">🔍</span>
+                </button>
+              </div>
+
+              {/* Promo Banner inside the red block */}
+              <div className="mt-5 flex justify-between items-center relative min-h-[140px]">
+                
+                {/* Promo Text (Left) */}
+                <div className="flex-1 flex flex-col justify-center z-10">
+                  <div className="bg-[#b91c1c] text-white text-[8px] font-black px-2 py-0.5 rounded-md w-max uppercase tracking-wide shadow-sm flex items-center gap-1">
+                    <span className="text-[10px]">🔴</span> P Market
+                  </div>
+                  <h1 className="text-yellow-300 font-extrabold text-4xl tracking-tighter mt-1 filter drop-shadow">
+                    60% OFF
+                  </h1>
+                  <p className="text-xs font-extrabold text-white tracking-wide mt-1 opacity-95">
+                    En productos seleccionados
+                  </p>
+                </div>
+
+                {/* Overlapping Products Displayed inside a Green background (Right) */}
+                <div className="absolute right-[-15px] top-[-10px] w-[180px] h-[160px] bg-[#34d399] rounded-l-full opacity-90 z-0 shadow-inner flex items-center justify-center overflow-hidden">
+                  
+                  {/* Styled overlapping product representations */}
+                  <div className="relative w-full h-full scale-90">
+                    
+                    {/* Tall Wine Bottle (Benjamin) in back-right */}
+                    <div className="absolute right-5 bottom-12 w-12 h-24 bg-gradient-to-b from-[#14532d] to-[#166534] rounded-t-lg rounded-b-md shadow-lg border border-yellow-500/30 flex flex-col justify-between p-1 text-center transform rotate-6 z-0">
+                      <span className="text-[10px] font-black text-yellow-300 uppercase tracking-widest scale-75 leading-none">B</span>
+                      <span className="text-[8px] font-extrabold text-white leading-none">BENJA</span>
+                      <span className="text-[14px]">🍾</span>
+                    </div>
+
+                    {/* Dishwash Soap (Magistral) in back-middle */}
+                    <div className="absolute right-14 bottom-8 w-11 h-20 bg-gradient-to-b from-yellow-100 to-yellow-400 rounded-t-xl rounded-b-md shadow-md border border-yellow-300 flex flex-col justify-between p-1 text-center transform -rotate-6 z-10">
+                      <span className="text-[6px] font-black text-blue-600 bg-white rounded uppercase leading-none py-0.5 px-0.5">MAGISTRAL</span>
+                      <span className="text-[14px] leading-none">🧴</span>
+                    </div>
+
+                    {/* Chocolate Bar (Milka Oreo) in front-right */}
+                    <div className="absolute right-2 bottom-3 w-16 h-10 bg-gradient-to-r from-purple-600 to-purple-800 rounded-md shadow-md border border-purple-400 flex flex-col justify-between p-1 transform rotate-3 z-20">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[7px] font-black text-white leading-none">Milka</span>
+                        <span className="text-[5px] font-extrabold text-blue-300 leading-none">OREO</span>
+                      </div>
+                      <span className="text-[12px] text-right mt-0.5">🍫</span>
+                    </div>
+
+                    {/* McCain Fries (McCain GOLAZO) in front-left */}
+                    <div className="absolute left-4 bottom-5 w-16 h-14 bg-gradient-to-b from-blue-500 to-blue-700 rounded-lg shadow-lg border border-blue-400 flex flex-col justify-between p-1 transform -rotate-12 z-20">
+                      <div className="flex justify-between items-start">
+                        <span className="text-[6px] font-black text-white leading-none bg-red-600 px-0.5 rounded">McCain</span>
+                        <span className="text-[5px] font-black text-yellow-300 leading-none">GOLAZO</span>
+                      </div>
+                      <span className="text-[16px] text-center leading-none">🍟</span>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Slider Dots */}
+              <div className="flex justify-center space-x-1.5 mt-5">
+                <span className="bg-white w-4 h-1 rounded-full"></span>
+                <span className="bg-white/40 w-1 h-1 rounded-full"></span>
+                <span className="bg-white/40 w-1 h-1 rounded-full"></span>
+              </div>
+
+            </div>
+
+            {/* Grid of Main Services (Restaurantes and P Market) */}
+            <div className="px-4 mt-6 grid grid-cols-2 gap-4">
+              
+              {/* Card 1: Restaurantes */}
+              <div 
+                onClick={() => {
+                  setPromptInput("Quiero pedir comida de restaurante");
+                  setActiveTab("build");
+                }}
+                className="bg-[#f8fafc] rounded-3xl p-4 flex flex-col justify-between items-start h-36 border border-gray-100/50 shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md active:scale-95 transition-all group"
+              >
+                <div className="text-6xl absolute right-1 top-2 select-none filter drop-shadow-md transform rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-6">
+                  🍔
+                </div>
+                <div className="mt-auto">
+                  <h3 className="text-base font-extrabold tracking-tight text-gray-900">Restaurantes</h3>
+                </div>
+              </div>
+
+              {/* Card 2: P Market */}
+              <div 
+                onClick={() => {
+                  setPromptInput("Quiero comprar en PedidosYa Market");
+                  setActiveTab("build");
+                }}
+                className="bg-[#f8fafc] rounded-3xl p-4 flex flex-col justify-between items-start h-36 border border-gray-100/50 shadow-sm relative overflow-hidden cursor-pointer hover:shadow-md active:scale-95 transition-all group"
+              >
+                {/* Market items representation */}
+                <div className="absolute right-1 top-2 text-5xl select-none filter drop-shadow-sm transform -rotate-12 transition-transform group-hover:scale-110 group-hover:-rotate-6">
+                  🥦🍅🥫
+                </div>
+                
+                <div className="mt-auto w-full flex flex-col items-start gap-1">
+                  {/* Styled P Market logo */}
+                  <div className="bg-[#e21247] text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                    <span>P</span> <span className="bg-white text-[#e21247] px-0.5 rounded-[1px] text-[6px]">Market</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Horizontal Categories Row */}
+            <div className="mt-6">
+              <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-none px-4">
+                
+                {/* Category 1: Súper */}
+                <div className="flex-shrink-0 w-20 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
+                  <div className="w-16 h-16 bg-[#f1f5f9] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 relative overflow-hidden">
+                    {/* Stylized Carrefour C logo */}
+                    <div className="text-2xl font-black text-blue-700 select-none">
+                      🛒
+                    </div>
+                    {/* Small tag */}
+                    <span className="absolute bottom-1 bg-blue-600 text-white font-extrabold text-[5px] px-1 py-0.2 rounded uppercase">
+                      Carrefour
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-800 text-center">Súper</span>
+                </div>
+
+                {/* Category 2: Helados */}
+                <div className="flex-shrink-0 w-20 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
+                  <div className="w-16 h-16 bg-[#f1f5f9] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+                    <span className="text-3xl filter drop-shadow-sm">🍨</span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-800 text-center">Helados</span>
+                </div>
+
+                {/* Category 3: Café & Deli */}
+                <div className="flex-shrink-0 w-20 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
+                  <div className="w-16 h-16 bg-[#f1f5f9] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+                    <span className="text-3xl filter drop-shadow-sm">☕</span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-800 text-center">Café & Deli</span>
+                </div>
+
+                {/* Category 4: Retiro */}
+                <div className="flex-shrink-0 w-20 flex flex-col items-center gap-1.5 cursor-pointer active:scale-95 transition-all">
+                  <div className="w-16 h-16 bg-[#f1f5f9] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+                    <span className="text-3xl filter drop-shadow-sm">🛍️</span>
+                  </div>
+                  <span className="text-xs font-bold text-gray-800 text-center">Retiro</span>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Favorite Brands Horizontal Row */}
+            <div className="mt-6 px-4">
+              <div className="flex items-center justify-between pb-3">
+                <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Locales Favoritos</h4>
+              </div>
+              <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-none justify-between items-center">
+                
+                {/* Brand 1: McDonald's */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#da291c] border border-red-100 shadow-sm flex items-center justify-center font-bold text-yellow-400 text-xl cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                  M
+                </div>
+
+                {/* Brand 2: Bullanga */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#1e3a8a] border border-blue-200 shadow-sm flex items-center justify-center text-[10px] font-black text-white text-center p-1 leading-none uppercase tracking-tighter cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                  BULLA
+                </div>
+
+                {/* Brand 3: Caffé del Popolo */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#27272a] border border-gray-700 shadow-sm flex items-center justify-center text-[8px] font-extrabold text-[#f5f5f4] text-center p-1 leading-none uppercase cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                  CAFFÉ
+                </div>
+
+                {/* Brand 4: Togni's Pizza */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-[#d97706] border border-yellow-200 shadow-sm flex items-center justify-center text-xl cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                  🍕
+                </div>
+
+                {/* Brand 5: Carrefour */}
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-[#1e3a8a] font-black text-xs cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                  🔵🔴
+                </div>
+
+              </div>
+            </div>
+
+            {/* Hidden file input receptors for camera, upload, and audio capturing */}
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              ref={cameraInputRef} 
+              className="hidden" 
+              onChange={(e) => handleFileChange(e, "image")} 
+            />
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={uploadInputRef} 
+              className="hidden" 
+              onChange={(e) => handleFileChange(e, "image")} 
+            />
+            <input 
+              type="file" 
+              accept="audio/*" 
+              ref={audioInputRef} 
+              className="hidden" 
+              onChange={(e) => handleFileChange(e, "audio")} 
+            />
+
+            {/* Floating List Action Button (📋) to toggle launcher */}
+            <button
+              onClick={() => {
+                setShowLauncher(prev => !prev);
+                setShowCameraOptions(false); // Reset camera options state
+              }}
+              className="fixed bottom-20 right-4 z-40 bg-[#e21247] hover:bg-[#b91c1c] active:scale-95 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg shadow-red-500/30 transition-all border border-red-400/20"
+              title="Abrir buscador cognitivo"
+            >
+              <span className="text-2xl filter drop-shadow-sm">📋</span>
+            </button>
+
+            {/* Glassmorphic "Armá tu lista" Bottom Panel with promo banner behind */}
+            {showLauncher && (
+              <div className="absolute bottom-16 left-0 right-0 p-4 pb-4 z-20 pointer-events-none flex flex-col justify-end">
+                
+                {/* Yellow Promo Banner behind */}
+                <div className="bg-yellow-300 text-black text-center py-2 px-4 rounded-t-2xl font-extrabold text-[11px] uppercase tracking-wide border-t border-x border-yellow-400 shadow-sm mb-[-10px] flex items-center justify-between pointer-events-auto">
+                  <span className="flex items-center gap-1">⏰ ¡Ahora hasta $2.500 de ahorro!</span>
+                  <span className="bg-black text-yellow-300 px-1.5 py-0.5 rounded font-black text-[9px]">04:00</span>
+                </div>
+
+                {/* Glassmorphic container */}
+                <div className="bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-2xl border border-white/40 pointer-events-auto flex flex-col gap-3 transition-all hover:scale-[1.01] hover:bg-white/90 relative">
+                  
+                  {/* Camera Sub-Options Popover (dropdown) */}
+                  {showCameraOptions && (
+                    <div className="absolute bottom-20 right-4 bg-white border border-gray-100 rounded-2xl shadow-xl p-2.5 z-30 flex flex-col gap-2 min-w-[170px] animate-fadeIn">
+                      <button
+                        onClick={() => {
+                          setShowCameraOptions(false);
+                          cameraInputRef.current?.click();
+                        }}
+                        className="flex items-center space-x-2 text-left text-xs font-bold text-gray-700 hover:bg-gray-50 p-2 rounded-xl transition-all"
+                      >
+                        <span>📸</span>
+                        <span>Tomar Foto (Cámara)</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowCameraOptions(false);
+                          uploadInputRef.current?.click();
+                        }}
+                        className="flex items-center space-x-2 text-left text-xs font-bold text-gray-700 hover:bg-gray-50 p-2 rounded-xl transition-all"
+                      >
+                        <span>📁</span>
+                        <span>Subir Foto (Galería)</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col">
+                    <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-1.5">
+                       Armá tu lista
+                    </h2>
+                    <p className="text-[10px] font-bold text-gray-500 mt-0.5">
+                      Sugerí un plato, asado o comida semanal y la IA armará tu lista.
+                    </p>
+                  </div>
+
+                  {/* Input with buttons */}
+                  <div className="flex items-center gap-2">
+                    <div 
+                      onClick={() => {
+                        setPromptInput("");
+                        setActiveTab("build");
+                        setShowLauncher(false);
+                      }}
+                      className="flex-1 bg-gray-100/90 hover:bg-gray-200/50 rounded-2xl px-4 py-3 border border-gray-200/50 flex items-center justify-between cursor-pointer transition-all"
+                    >
+                      <span className="text-gray-400 text-sm font-semibold">Empezá tu lista</span>
+                      <span className="text-gray-400 text-xs">🤖</span>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        audioInputRef.current?.click();
+                      }}
+                      title="Dictar lista (audio)"
+                      className="w-12 h-12 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-2xl flex items-center justify-center border border-gray-200/50 cursor-pointer transition-all text-xl"
+                    >
+                      🎙️
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        setShowCameraOptions(prev => !prev);
+                      }}
+                      title="Analizar foto / subir imagen"
+                      className={`w-12 h-12 active:scale-95 rounded-2xl flex items-center justify-center border cursor-pointer transition-all text-xl ${
+                        showCameraOptions 
+                          ? "bg-red-50 border-red-200 text-red-500" 
+                          : "bg-gray-100 hover:bg-gray-200 border-gray-200/50"
+                      }`}
+                    >
+                      📷
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+          </div>
+        )}
+
         {/* TAB 1: BUILD (AI Assistant) */}
         {activeTab === "build" && (
           <div className="p-4 space-y-4">
@@ -350,7 +764,12 @@ export default function Home() {
                 {isLoading ? (
                   <span className="flex items-center justify-center">
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
-                    🤖 Generando Lista Inteligente...
+                    {loadingType === "image" 
+                      ? "🤖 Analizando foto de lista..." 
+                      : loadingType === "audio"
+                        ? "🎙️ Interpretando nota de voz..."
+                        : "🤖 Generando Lista Inteligente..."
+                    }
                   </span>
                 ) : (
                   "🤖 Generar Lista Inteligente"
@@ -453,7 +872,36 @@ export default function Home() {
               </div>
             )}
 
-            {/* Empty landing view */}
+            {/* Empty landing view / Loading state card */}
+            {!generatedList && isLoading && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-md p-8 text-center space-y-4 max-w-sm mx-auto animate-pulse mt-8">
+                <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center text-3xl">
+                  {loadingType === "image" ? "📸" : loadingType === "audio" ? "🎙️" : "🤖"}
+                </div>
+                <div>
+                  <p className="text-sm font-extrabold text-gray-800">
+                    {loadingType === "image" 
+                      ? "Escaneando imagen con IA..." 
+                      : loadingType === "audio"
+                        ? "Escuchando nota de voz..."
+                        : "Construyendo tu lista inteligente..."
+                    }
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1.5 max-w-xs mx-auto">
+                    {loadingType === "image"
+                      ? "Estamos identificando los productos de la foto de tu lista de papel o ingredientes."
+                      : loadingType === "audio"
+                        ? "Estamos transcribiendo y abstrayendo productos de tu dictado."
+                        : "Nuestra inteligencia artificial está ordenando los productos idóneos presentes en el backend."
+                    }
+                  </p>
+                </div>
+                <div className="flex justify-center pt-2">
+                  <div className="w-6 h-6 border-2 border-[#e21247] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              </div>
+            )}
+
             {!generatedList && !isLoading && (
               <div className="text-center py-16 text-gray-400 space-y-4">
                 <span className="text-6xl animate-pulse inline-block">🤖</span>
@@ -842,10 +1290,19 @@ export default function Home() {
       </section>
 
       {/* Tabs Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-10">
+      <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex items-center justify-around h-16 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30">
+        <button
+          onClick={() => setActiveTab("home")}
+          className={`flex flex-col items-center justify-center flex-1 h-full text-[10px] font-bold transition-all ${
+            activeTab === "home" ? "text-red-600" : "text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          <span className="text-lg mb-0.5">🏠</span>
+          <span>Inicio</span>
+        </button>
         <button
           onClick={() => setActiveTab("build")}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-xs font-semibold transition-all ${
+          className={`flex flex-col items-center justify-center flex-1 h-full text-[10px] font-bold transition-all ${
             activeTab === "build" ? "text-red-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
@@ -854,7 +1311,7 @@ export default function Home() {
         </button>
         <button
           onClick={() => setActiveTab("lists")}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-xs font-semibold transition-all ${
+          className={`flex flex-col items-center justify-center flex-1 h-full text-[10px] font-bold transition-all ${
             activeTab === "lists" ? "text-red-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
@@ -863,7 +1320,7 @@ export default function Home() {
         </button>
         <button
           onClick={() => setActiveTab("checkout")}
-          className={`flex flex-col items-center justify-center flex-1 h-full text-xs font-semibold transition-all ${
+          className={`flex flex-col items-center justify-center flex-1 h-full text-[10px] font-bold transition-all ${
             activeTab === "checkout" ? "text-red-600" : "text-gray-400 hover:text-gray-600"
           }`}
         >
