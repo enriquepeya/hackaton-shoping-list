@@ -83,6 +83,78 @@ export default function Home() {
 
   // Saved lists from Go backend (with local mockup fallback)
   const [savedLists, setSavedLists] = useState<SavedList[]>([]);
+  const [newItemInput, setNewItemInput] = useState("");
+
+  const handleSaveGeneratedList = async () => {
+    if (!generatedList) return;
+
+    const listId = "list-" + Date.now();
+    const listToSave: SavedList = {
+      id: listId,
+      title: generatedList.list_title,
+      description: generatedList.description,
+      vendorAssociated: generatedList.suggested_stores[activeStoreIndex]?.store_name || "PedidosYa Market",
+      items: generatedList.items.map((it, iIdx) => ({
+        sku: "sku-" + iIdx,
+        description: it.name,
+        quantity: it.quantity,
+        addedByUserId: "user-123"
+      }))
+    };
+
+    // Save locally
+    setSavedLists(prev => [listToSave, ...prev]);
+
+    // Also attempt to save to Go Hexagonal Backend
+    try {
+      const payload = {
+        id: listId,
+        title: generatedList.list_title,
+        ownerId: "user-123",
+        vendorAssociated: generatedList.suggested_stores[activeStoreIndex]?.store_name || "PedidosYa Market",
+        items: generatedList.items.map((it, iIdx) => ({
+          sku: "sku-" + iIdx,
+          listId: listId,
+          description: it.name,
+          quantity: it.quantity
+        }))
+      };
+
+      await fetch(`${BACKEND_URL}/api/v1/lists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      console.warn("Could not persist list to Go backend. Saved locally.", err);
+    }
+
+    alert("¡Lista guardada con éxito en Mis Listas! 🎉");
+    setActiveTab("lists");
+  };
+
+  const handleDeleteItemFromGeneratedList = (idxToDelete: number) => {
+    if (!generatedList) return;
+    const updatedItems = generatedList.items.filter((_, idx) => idx !== idxToDelete);
+    setGeneratedList({
+      ...generatedList,
+      items: updatedItems
+    });
+  };
+
+  const handleAddNewItemToGeneratedList = (name: string, size: string = "1 u") => {
+    if (!generatedList || !name.trim()) return;
+    const newItem = {
+      name: name,
+      brand: "Genérico",
+      quantity: 1,
+      size: size
+    };
+    setGeneratedList({
+      ...generatedList,
+      items: [...generatedList.items, newItem]
+    });
+  };
 
   // Fetch saved lists from Go Hexagonal Backend
   const fetchSavedLists = async () => {
@@ -876,69 +948,128 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Generated results visualization */}
+            {/* Generated results visualization (Requirements 1 & 2 - ejemplo-lista.png) */}
             {generatedList && (
-              <div className="space-y-4 animate-fadeIn">
+              <div className="space-y-4 animate-fadeIn relative pb-40">
                 
-                {/* Result header details */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start animate-fadeIn">
-                  <div className="flex-1 mr-2">
-                    <h3 className="text-xl font-extrabold text-gray-800">{generatedList.list_title}</h3>
-                    <p className="text-xs text-gray-500 mt-1">{generatedList.description}</p>
+                {/* Status Bar Mockup */}
+                <div className="flex justify-between items-center text-xs font-semibold tracking-wider opacity-90 px-2 -mt-2">
+                  <span>9:41</span>
+                  {/* Floating rounded bubble avatar in center */}
+                  <div className="w-7 h-7 rounded-full bg-gray-200 border border-white flex items-center justify-center font-bold text-sm shadow-md">
+                    👩
                   </div>
+                  <div className="flex items-center space-x-1">
+                    <span>📶</span>
+                    <span>🛜</span>
+                    <span>🔋</span>
+                  </div>
+                </div>
+
+                {/* Sub-Header Actions Row */}
+                <div className="flex justify-between items-center px-1 border-b border-gray-50 pb-2">
                   <button
-                    onClick={() => handleShareList(generatedList.list_title, "list-123")}
-                    className="flex-shrink-0 bg-red-50 hover:bg-red-100 text-[#e21247] font-extrabold text-[10px] px-3 py-1.5 rounded-full transition-all active:scale-95 flex items-center gap-1 cursor-pointer border border-red-100/50 uppercase tracking-wider"
-                    title="Compartir esta lista"
+                    onClick={() => setGeneratedList(null)}
+                    className="text-gray-600 hover:text-gray-900 font-extrabold text-xl p-1.5 focus:outline-none"
+                    title="Volver"
                   >
-                    <span>🔗 Compartir</span>
+                    ⟨
                   </button>
+                  <div className="flex items-center space-x-3">
+                    {/* Share icon */}
+                    <button
+                      onClick={() => handleShareList(generatedList.list_title, "list-123")}
+                      className="text-gray-600 hover:text-gray-900 p-1.5 text-lg"
+                      title="Compartir"
+                    >
+                      📤
+                    </button>
+                    {/* Collaborative Icon */}
+                    <button
+                      className="text-gray-600 hover:text-gray-900 p-1.5 text-lg"
+                      title="Colaboradores"
+                    >
+                      👥
+                    </button>
+                    {/* Guardar Pill Button */}
+                    <button
+                      onClick={handleSaveGeneratedList}
+                      className="bg-black hover:bg-gray-800 text-white font-black text-xs px-5 py-2 rounded-full shadow-sm transition-all active:scale-95"
+                    >
+                      Guardar
+                    </button>
+                  </div>
                 </div>
 
-                {/* Items container details */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
-                  <div className="flex justify-between items-center border-b border-gray-100 pb-2">
-                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Productos de la lista</h4>
-                    <span className="text-xs bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded-full">
-                      {generatedList.items.length} items
-                    </span>
+                {/* Title & Subtitle */}
+                <div className="px-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-3xl font-black text-gray-950 tracking-tight">
+                      {generatedList.list_title}
+                    </h3>
+                    <span className="text-lg text-gray-400 p-1 cursor-pointer hover:text-gray-600">✏️</span>
                   </div>
+                  <p className="text-sm font-bold text-gray-600 mt-1">
+                    {generatedList.description}
+                  </p>
+                </div>
 
-                  <div className="space-y-3 divide-y divide-gray-50">
-                    {generatedList.items.map((item, idx) => (
-                      <div key={idx} className="pt-2 flex items-start justify-between">
-                        <div className="space-y-1">
-                          <p className="text-sm font-bold text-gray-800">{item.name}</p>
-                          <p className="text-xs text-gray-400">Marca: {item.brand} • Tam: {item.size}</p>
-                          
-                          {/* Alert Octagons implementation */}
-                          {getOctagons(item).length > 0 && (
-                            <div className="flex gap-1.5 pt-1">
-                              {getOctagons(item).map((alert, oIdx) => (
-                                <span
-                                  key={oIdx}
-                                  className="bg-black text-white text-[8px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wide border border-black"
-                                >
-                                  🛑 {alert}
-                                </span>
-                              ))}
+                {/* Items Card List (rounded light gray card) */}
+                <div className="bg-gray-50 border border-gray-100 rounded-[2rem] p-4 space-y-4">
+                  {generatedList.items.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 text-xs">
+                      No hay productos en la lista. ¡Agregá algunos abajo!
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {generatedList.items.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between animate-fadeIn">
+                          <div className="flex items-center flex-1 mr-2">
+                            {/* Check checkered square placeholder */}
+                            <div className="w-12 h-12 bg-white/80 border border-gray-200/50 rounded-xl flex items-center justify-center text-lg shadow-sm flex-shrink-0 relative select-none">
+                              📦
                             </div>
-                          )}
+                            <div className="ml-3">
+                              <p className="text-sm font-extrabold text-gray-900 leading-tight text-left">
+                                {item.name}
+                              </p>
+                              <p className="text-xs text-gray-400 font-bold mt-0.5 text-left">
+                                {item.quantity} {item.size} • {item.brand}
+                              </p>
+                              
+                              {/* Alert Octagons */}
+                              {getOctagons(item).length > 0 && (
+                                <div className="flex gap-1 pt-1 flex-wrap">
+                                  {getOctagons(item).map((alert, oIdx) => (
+                                    <span
+                                      key={oIdx}
+                                      className="bg-black text-white text-[7px] font-black px-1.5 py-0.5 rounded-sm uppercase tracking-wider"
+                                    >
+                                      🛑 {alert.split(" ")[2]}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Trash delete button */}
+                          <button
+                            onClick={() => handleDeleteItemFromGeneratedList(idx)}
+                            className="text-gray-400 hover:text-red-500 p-2 cursor-pointer transition-all active:scale-90"
+                            title="Eliminar producto"
+                          >
+                            🗑️
+                          </button>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs bg-gray-100 text-gray-600 font-extrabold px-2.5 py-1 rounded-md">
-                            x{item.quantity}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Suggested Stores Module */}
-                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 space-y-3">
-                  <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Elegí el local más conveniente</h4>
-                  
+                {/* Suggested Stores Selection (Compact) */}
+                <div className="bg-white p-4 rounded-2xl border border-gray-100/50 space-y-3 shadow-sm">
+                  <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider">Elegí el comercio</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {generatedList.suggested_stores.map((store, sIdx) => (
                       <button
@@ -950,73 +1081,159 @@ export default function Home() {
                             : "border-gray-100 hover:border-gray-200 bg-white"
                         }`}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <span className="text-sm font-bold text-gray-800">{store.store_name}</span>
+                        <div>
+                          <p className="text-xs font-extrabold text-gray-800 truncate">{store.store_name}</p>
                           {store.badge && (
-                            <span className="bg-red-100 text-red-700 font-extrabold text-[8px] px-1.5 py-0.5 rounded-full uppercase">
+                            <span className="bg-red-100 text-red-700 font-extrabold text-[8px] px-1.5 py-0.5 rounded-full uppercase mt-1 inline-block">
                               {store.badge}
                             </span>
                           )}
                         </div>
-                        <div className="mt-2.5">
-                          <p className="text-xs text-gray-400">Entrega: {store.eta}</p>
-                          <p className="text-sm font-extrabold text-gray-900 mt-0.5">
-                            ${store.total_price.toLocaleString("es-AR")}
-                          </p>
-                        </div>
+                        <p className="text-sm font-extrabold text-gray-900 mt-2">
+                          ${store.total_price.toLocaleString("es-AR")}
+                        </p>
                       </button>
                     ))}
                   </div>
 
                   <button
                     onClick={handleProceedToCheckout}
-                    className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-red-100 flex items-center justify-center space-x-2"
+                    className="w-full mt-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3.5 px-4 rounded-xl transition-all shadow-md shadow-red-100 flex items-center justify-center space-x-2 uppercase tracking-wider"
                   >
-                    <span>Continuar al checkout</span>
+                    <span>Continuar al checkout (${generatedList.suggested_stores[activeStoreIndex]?.total_price.toLocaleString("es-AR")})</span>
                     <span className="text-sm">👉</span>
                   </button>
+                </div>
+
+                {/* Sliding input drawer / Add Item Suggestion Drawer (Requirement 1) */}
+                <div className="bg-white border-t border-gray-100 rounded-t-[2rem] p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.03)] space-y-4 absolute bottom-0 left-0 right-0">
+                  {/* Slider handle bar */}
+                  <div className="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-1.5 mb-2"></div>
+                  
+                  {/* Text input with camera and mic trigger buttons */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newItemInput.trim()) {
+                        handleAddNewItemToGeneratedList(newItemInput);
+                        setNewItemInput("");
+                      }
+                    }}
+                    className="flex items-center gap-2 pointer-events-auto"
+                  >
+                    <div className="flex-1 bg-gray-100 hover:bg-gray-200/50 rounded-2xl px-4 py-2.5 border border-gray-200/50 flex items-center transition-all focus-within:ring-2 focus-within:ring-red-500/30">
+                      <input
+                        type="text"
+                        value={newItemInput}
+                        onChange={(e) => setNewItemInput(e.target.value)}
+                        placeholder="Qué necesitas"
+                        className="w-full bg-transparent text-sm font-bold text-gray-800 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => audioInputRef.current?.click()}
+                        className="text-gray-400 hover:text-gray-600 p-1 focus:outline-none text-base"
+                        title="Dictar voz"
+                      >
+                        🎙️
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowCameraOptions(prev => !prev)}
+                      className="w-12 h-12 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-2xl flex items-center justify-center border border-gray-200/50 cursor-pointer text-xl"
+                      title="Cámara"
+                    >
+                      📷
+                    </button>
+                  </form>
+
+                  {/* Suggestions with + button list */}
+                  <div className="space-y-2.5 pt-1 pointer-events-auto">
+                    <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                          🧀
+                        </div>
+                        <div className="ml-2.5">
+                          <p className="text-xs font-extrabold text-gray-800 text-left">Queso feta</p>
+                          <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">500 gr.</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddNewItemToGeneratedList("Queso feta", "500 gr.")}
+                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between bg-gray-50/50 border border-gray-100/50 p-3 rounded-2xl">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-white border border-gray-200/50 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                          🥣
+                        </div>
+                        <div className="ml-2.5">
+                          <p className="text-xs font-extrabold text-gray-800 text-left">Granola con almendras</p>
+                          <p className="text-[10px] text-gray-400 font-bold mt-0.5 text-left">200 gr.</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddNewItemToGeneratedList("Granola con almendras", "200 gr.")}
+                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-lg flex items-center justify-center font-black text-gray-600 cursor-pointer text-base"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
 
               </div>
             )}
 
-            {/* Empty landing view / Loading state card */}
+            {/* Empty landing view / Loading state card (Requirement 4 - Superposed Overlay Modal) */}
             {isOcrAnalyzing && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6 space-y-4 animate-fadeIn max-w-sm mx-auto">
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-                  <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
-                    🔍 IA LEYENDO MANUSCRITO
-                  </h3>
-                  <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></span>
-                </div>
-                
-                {/* Simulated preview of the paper list */}
-                <div className="bg-yellow-50/70 border border-yellow-100 rounded-xl p-4 shadow-inner relative overflow-hidden h-44 flex flex-col justify-between">
-                  <div className="absolute right-2 top-2 text-2xl opacity-15">📝</div>
-                  <div className="space-y-2.5 font-mono text-[10px] text-gray-600">
-                    <p className={`transition-all duration-300 ${ocrStep >= 1 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
-                      [Línea 1] Leche entera x2 ................ [✓ LECTURA OK]
-                    </p>
-                    <p className={`transition-all duration-300 ${ocrStep >= 2 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
-                      [Línea 2] Huevos x6 ....................... [✓ LECTURA OK]
-                    </p>
-                    <p className={`transition-all duration-300 ${ocrStep >= 3 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
-                      [Línea 3] Harina de trigo x1 .............. [✓ LECTURA OK]
-                    </p>
-                    <p className={`transition-all duration-300 ${ocrStep >= 4 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
-                      [Línea 4] Tomates perita x1 ............... [✓ LECTURA OK]
-                    </p>
-                    <p className={`transition-all duration-300 ${ocrStep >= 5 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
-                      [Línea 5] Queso rallado x2 ................ [✓ LECTURA OK]
-                    </p>
+              <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-2xl p-6 space-y-4 animate-scaleUp max-w-sm w-full mx-auto pointer-events-auto">
+                  <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider flex items-center gap-1.5">
+                      🔍 IA LEYENDO MANUSCRITO
+                    </h3>
+                    <span className="w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></span>
                   </div>
-                  <div className="text-[9px] font-bold text-gray-400 text-center uppercase tracking-widest pt-2">
-                    {ocrStep < 5 ? "Extrayendo productos..." : "Análisis completado de forma exitosa"}
+                  
+                  {/* Simulated preview of the paper list */}
+                  <div className="bg-yellow-50/70 border border-yellow-100 rounded-xl p-4 shadow-inner relative overflow-hidden h-44 flex flex-col justify-between text-left">
+                    <div className="absolute right-2 top-2 text-2xl opacity-15">📝</div>
+                    <div className="space-y-2.5 font-mono text-[10px] text-gray-600">
+                      <p className={`transition-all duration-300 ${ocrStep >= 1 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                        [Línea 1] Leche entera x2 ................ [✓ LECTURA OK]
+                      </p>
+                      <p className={`transition-all duration-300 ${ocrStep >= 2 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                        [Línea 2] Huevos x6 ....................... [✓ LECTURA OK]
+                      </p>
+                      <p className={`transition-all duration-300 ${ocrStep >= 3 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                        [Línea 3] Harina de trigo x1 .............. [✓ LECTURA OK]
+                      </p>
+                      <p className={`transition-all duration-300 ${ocrStep >= 4 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                        [Línea 4] Tomates perita x1 ............... [✓ LECTURA OK]
+                      </p>
+                      <p className={`transition-all duration-300 ${ocrStep >= 5 ? "opacity-100 text-green-700 font-extrabold" : "opacity-30"}`}>
+                        [Línea 5] Queso rallado x2 ................ [✓ LECTURA OK]
+                      </p>
+                    </div>
+                    <div className="text-[9px] font-bold text-gray-400 text-center uppercase tracking-widest pt-2">
+                      {ocrStep < 5 ? "Extrayendo productos..." : "Análisis completado de forma exitosa"}
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex justify-center pt-2">
-                  <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="flex justify-center pt-2">
+                    <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
                 </div>
               </div>
             )}

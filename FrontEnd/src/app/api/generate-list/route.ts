@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Fallback lists for offline / hackathon demo mode
+// Initialize Gemini SDK with credentials
+const apiKey = process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.GEMINI_API_KEY || "";
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
+
+// Fallback mock lists for offline / hackathon demo mode
 const mockAsadoList = {
   list_title: "Asado Día del amigo",
   description: "Asado completo y bebidas sugeridas para 5 personas",
@@ -93,6 +98,70 @@ export async function POST(request: Request) {
     const prompt = (body.prompt || "").toLowerCase();
     const type = body.type || "text"; // "text", "image", "audio"
 
+    // If Gemini client is initiated and we have a valid key, query Gemini Live!
+    if (genAI) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: "gemini-1.5-flash",
+          generationConfig: { responseMimeType: "application/json" }
+        });
+
+        const systemPrompt = `
+          Eres el motor cognitivo de un Asistente de Compras para PedidosYa. Tu objetivo es procesar inputs del usuario y estructurar una lista de compras.
+          Debes responder ÚNICAMENTE con un objeto JSON en este formato exacto:
+          {
+            "list_title": "Nombre de la lista (ej. Desayuno semanal, Asado Día del amigo)",
+            "description": "Breve descripción sobre lo que se interpretó",
+            "items": [
+              { "name": "Nombre exacto del producto", "brand": "Marca recomendada o 'Genérico'", "quantity": 1, "size": "tamaño, ej. 1 litro, 6 unidades, 350 gr., 1 kilo" }
+            ],
+            "suggested_stores": [
+              { "store_name": "PedidosYa Market", "total_price": 14500, "eta": "15 - 20 min", "badge": "Más rápido" },
+              { "store_name": "Carrefour", "total_price": 13800, "eta": "25 - 35 min", "badge": "Mejor precio" }
+            ]
+          }
+        `;
+
+        let result;
+
+        if (type === "image" && body.image) {
+          const base64Data = body.image.split(",")[1];
+          const mimeType = body.image.split(";")[0].split(":")[1];
+          const imagePart = { inlineData: { data: base64Data, mimeType } };
+
+          result = await model.generateContent([
+            systemPrompt,
+            imagePart,
+            "Analiza esta foto de una lista manuscrita en papel e interpreta todos los productos para crear la lista."
+          ]);
+        } else if (type === "audio" && body.audio) {
+          const base64Data = body.audio.split(",")[1];
+          const mimeType = body.audio.split(";")[0].split(":")[1];
+          const audioPart = { inlineData: { data: base64Data, mimeType } };
+
+          result = await model.generateContent([
+            systemPrompt,
+            audioPart,
+            "Escucha esta nota de voz con el dictado de un pedido de compras e interpreta los productos."
+          ]);
+        } else {
+          const textInput = body.prompt || "Cena saludable rápida";
+          result = await model.generateContent([
+            systemPrompt,
+            `Genera una lista de compras inteligente basada en esta petición: "${textInput}".`
+          ]);
+        }
+
+        const responseText = result.response.text();
+        const parsedJSON = JSON.parse(responseText);
+        return NextResponse.json(parsedJSON, { status: 200 });
+
+      } catch (geminiError: any) {
+        console.warn("Gemini Live Query failed, falling back to mocks.", geminiError);
+      }
+    }
+
+    // Default Fallback Mock Logic
     let listToReturn = mockDefaultList;
 
     if (type === "image" || body.image) {
@@ -117,4 +186,14 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    {
+      message: "Este endpoint BFF de la IA solo admite peticiones POST para construir listas inteligentes.",
+      instructions: "Utiliza la interfaz móvil de la PWA para interactuar de forma multimodal (Texto, Foto o Voz)."
+    },
+    { status: 200 }
+  );
 }
