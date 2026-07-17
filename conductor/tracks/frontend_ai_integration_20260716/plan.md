@@ -19,7 +19,7 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
     - [ ] Implement fallback mock logic (returning predefined lists for "Asado", "Desayuno", etc.) for offline hackathon testing
     - [ ] Write integration test validating API endpoint parses inputs correctly and responds with valid structured JSON
 
-## Phase 3: Visual Interface & UI Components
+## Phase 3: Visual Interface & UI Components [checkpoint: 366431d]
 - [x] Task: Build Buscador Cognitivo & Chip suggestions (3884fed)
     - [ ] Create input text field block and horizontal suggestion chips list (e.g. "Para toda la semana")
 - [x] Task: Build Gestor de Listas & Item Details (3884fed)
