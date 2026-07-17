@@ -20,13 +20,13 @@ This plan breaks down the development of the "List-Builder" frontend and Next.js
     - [ ] Write integration test validating API endpoint parses inputs correctly and responds with valid structured JSON
 
 ## Phase 3: Visual Interface & UI Components
-- [ ] Task: Build Buscador Cognitivo & Chip suggestions
+- [x] Task: Build Buscador Cognitivo & Chip suggestions (3884fed)
     - [ ] Create input text field block and horizontal suggestion chips list (e.g. "Para toda la semana")
-- [ ] Task: Build Gestor de Listas & Item Details
+- [x] Task: Build Gestor de Listas & Item Details (3884fed)
     - [ ] Build item lists component rendering SKU, EAN, description, quantities, and black warning octagons (e.g., "Exceso en Azúcares")
-- [ ] Task: Build Comparador de Locales
+- [x] Task: Build Comparador de Locales (3884fed)
     - [ ] Implement shop comparison tabs (Carrefour, Jumbo, PedidosYa Market, Dia) showing total price, ETA, and badges (e.g., "Mejor precio")
-- [ ] Task: Build Checkout and Payment flow
+- [x] Task: Build Checkout and Payment flow (3884fed)
     - [ ] Create checkout form with priority delivery check toggle, rider tips button group, and final totals module
 
 ## Phase 4: Full Integration with Go Hexagonal API Backend
