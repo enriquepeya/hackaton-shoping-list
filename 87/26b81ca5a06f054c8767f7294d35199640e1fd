@@ -1,0 +1,26 @@
+conductor/product.md
+  s_d5bf36b4244bde::t_03cdd3b8c7e01e 20-21
+conductor/tech-stack.md
+  s_d5bf36b4244bde::t_270d61819cee77 18-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8726b81ca5a06f054c8767f7294d35199640e1fd",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_d5bf36b4244bde": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "f76899b8-d97c-42b6-956b-5bdd509e5912",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
