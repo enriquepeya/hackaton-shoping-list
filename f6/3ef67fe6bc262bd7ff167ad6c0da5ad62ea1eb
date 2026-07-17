@@ -1,0 +1,40 @@
+FrontEnd/src/app/page.tsx
+  s_d5bf36b4244bde::t_12a754fdd9cee7 1-10
+FrontEnd/src/app/globals.css
+  s_d5bf36b4244bde::t_5507cb610e6e21 1-15
+FrontEnd/package.json
+  s_d5bf36b4244bde::t_c779543232d38a 1-25
+FrontEnd/next.config.js
+  s_d5bf36b4244bde::t_22f97c9e060419 1-6
+FrontEnd/postcss.config.js
+  s_d5bf36b4244bde::t_9ccd8c149836db 1-6
+FrontEnd/src/app/layout.tsx
+  s_d5bf36b4244bde::t_f1e5599bcab336 1-21
+FrontEnd/.gitignore
+  s_d5bf36b4244bde::t_abd8bc3f292e49 1-29
+FrontEnd/tsconfig.json
+  s_d5bf36b4244bde::t_bf6dbc119d40c9 1-28
+FrontEnd/tailwind.config.js
+  s_d5bf36b4244bde::t_b17f044c6ab982 1-12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f63ef67fe6bc262bd7ff167ad6c0da5ad62ea1eb",
+  "prompts": {},
+  "humans": {
+    "h_1e5e4532f656b1": {
+      "author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  },
+  "sessions": {
+    "s_d5bf36b4244bde": {
+      "agent_id": {
+        "tool": "gemini",
+        "id": "f76899b8-d97c-42b6-956b-5bdd509e5912",
+        "model": "gemini-3.5-flash"
+      },
+      "human_author": "Enrique Milano <enrique.milano@pedidosya.com>"
+    }
+  }
+}
