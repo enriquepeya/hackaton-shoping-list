@@ -579,30 +579,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Hidden file input receptors for camera, upload, and audio capturing */}
-            <input 
-              type="file" 
-              accept="image/*" 
-              capture="environment" 
-              ref={cameraInputRef} 
-              className="hidden" 
-              onChange={(e) => handleFileChange(e, "image")} 
-            />
-            <input 
-              type="file" 
-              accept="image/*" 
-              ref={uploadInputRef} 
-              className="hidden" 
-              onChange={(e) => handleFileChange(e, "image")} 
-            />
-            <input 
-              type="file" 
-              accept="audio/*" 
-              ref={audioInputRef} 
-              className="hidden" 
-              onChange={(e) => handleFileChange(e, "audio")} 
-            />
-
             {/* Floating List Action Button (📋) to toggle launcher */}
             <button
               onClick={() => {
@@ -663,21 +639,39 @@ export default function Home() {
                     </p>
                   </div>
 
-                  {/* Input with buttons */}
-                  <div className="flex items-center gap-2">
-                    <div 
-                      onClick={() => {
-                        setPromptInput("");
+                  {/* Input with buttons (interactive form) */}
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (promptInput.trim()) {
                         setActiveTab("build");
                         setShowLauncher(false);
-                      }}
-                      className="flex-1 bg-gray-100/90 hover:bg-gray-200/50 rounded-2xl px-4 py-3 border border-gray-200/50 flex items-center justify-between cursor-pointer transition-all"
-                    >
-                      <span className="text-gray-400 text-sm font-semibold">Empezá tu lista</span>
-                      <span className="text-gray-400 text-xs">🤖</span>
+                        handleGenerateList(promptInput, undefined, "text");
+                      }
+                    }}
+                    className="flex items-center gap-2 w-full pointer-events-auto"
+                  >
+                    <div className="flex-1 bg-gray-100/90 rounded-2xl px-4 py-1.5 border border-gray-200/50 flex items-center transition-all focus-within:ring-2 focus-within:ring-[#e21247]/30">
+                      <input
+                        type="text"
+                        value={promptInput}
+                        onChange={(e) => setPromptInput(e.target.value)}
+                        placeholder="Empezá tu lista..."
+                        className="w-full bg-transparent text-sm font-semibold text-gray-800 focus:outline-none py-1.5"
+                      />
+                      <button 
+                        type="submit" 
+                        disabled={!promptInput.trim()}
+                        className={`font-extrabold text-xs ml-2 uppercase tracking-wide focus:outline-none transition-all ${
+                          promptInput.trim() ? "text-[#e21247] hover:scale-105 active:scale-95 cursor-pointer" : "text-gray-300 cursor-not-allowed"
+                        }`}
+                      >
+                        Enviar
+                      </button>
                     </div>
 
                     <button 
+                      type="button"
                       onClick={() => {
                         audioInputRef.current?.click();
                       }}
@@ -688,6 +682,7 @@ export default function Home() {
                     </button>
 
                     <button 
+                      type="button"
                       onClick={() => {
                         setShowCameraOptions(prev => !prev);
                       }}
@@ -700,7 +695,7 @@ export default function Home() {
                     >
                       📷
                     </button>
-                  </div>
+                  </form>
                 </div>
 
               </div>
@@ -726,6 +721,34 @@ export default function Home() {
                   className="w-full h-24 text-sm border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all resize-none"
                   disabled={isLoading}
                 />
+              </div>
+
+              {/* Explicit Multimodal Action Buttons */}
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => audioInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>🎙️ Dictar Voz</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>📸 Tomar Foto</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => uploadInputRef.current?.click()}
+                  disabled={isLoading}
+                  className="bg-red-50 hover:bg-red-100/80 text-[#e21247] border border-red-100 rounded-xl py-2 px-1 text-[11px] font-extrabold flex items-center justify-center gap-1 transition-all active:scale-95 cursor-pointer"
+                >
+                  <span>📁 Subir Foto</span>
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-2 mt-3">
@@ -1328,6 +1351,30 @@ export default function Home() {
           <span>Checkout</span>
         </button>
       </nav>
+
+      {/* Hidden file input receptors mounted globally for camera, upload, and audio capturing */}
+      <input 
+        type="file" 
+        accept="image/*" 
+        capture="environment" 
+        ref={cameraInputRef} 
+        className="hidden" 
+        onChange={(e) => handleFileChange(e, "image")} 
+      />
+      <input 
+        type="file" 
+        accept="image/*" 
+        ref={uploadInputRef} 
+        className="hidden" 
+        onChange={(e) => handleFileChange(e, "image")} 
+      />
+      <input 
+        type="file" 
+        accept="audio/*" 
+        ref={audioInputRef} 
+        className="hidden" 
+        onChange={(e) => handleFileChange(e, "audio")} 
+      />
     </main>
   );
 }
